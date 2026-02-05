@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abbe4800fc748cf4ebe1a4b29601fcaf, type: 3}
+  m_Name: Mission_07_UpgradeWinch
+  m_EditorClassIdentifier:
+  missionId: upgrade_winch
+  missionName: Upgrade Winch
+  objectiveText: 'Time to upgrade your winch.
+
+    Go to the Workbench and extend your cable.'
+  completionTrigger: 9
+  showMarker: 1
+  markerTargetTag:
+  markerTargetName: UpgradeStation
+  rewardType: 0
+  helpText: 'Focus on the winch upgrade.
+
+    Other upgrades are locked for now.'
+  helpTextHideTrigger: 0
+  completionMessage: 'Winch upgraded!
+
+    You can now dig deeper.'
+  completionMessageDuration: 3
+  centeredPopupMessage:
+  centeredPopupDuration: 4
+  secondaryObjectiveText: 'The cable is too short.
+
+    You''ll need to upgrade it
+    to go deeper.'
+  wrongUpgradeToastMessage: Focus on the winch upgrade first.
+  requiredDigCount: 0
+  hideMarkerOnFirstDig: 0
+  firstDigPopupMessage:
+  firstDigPopupDuration: 4
+  requiredResourceCount: 0
+  resourceCounterLabel: Resources
+  toolPowerUpgradePopup:
+  energyUpgradePopup:
+  conditionalPopupDuration: 4
+  crosshairHintText:
+  crosshairHintHideTrigger: 0
+  lockUpgradesExceptWinch: 1

@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3aa62ba187f23545bed18362d140297, type: 3}
+  m_Name: CopperFragment_Item
+  m_EditorClassIdentifier: 
+  itemId: underground_copperfragment
+  itemName: Copper Fragment
+  description: A copper fragment extracted from underground digging.
+  icon: {fileID: 21300000, guid: cdb45c37734c7bd47ac9b9cbe0491036, type: 3}
+  category: 1
+  isStackable: 1
+  maxStackSize: 999
+  buyPrice: 0
+  sellPrice: 8
+  worldPrefab: {fileID: 0}
+  heldPrefab: {fileID: 0}
+  materialType: 0
+  craftingValue: 1
+  canBeRefined: 1
+  refinedOutput: {fileID: 0}
+  refineTime: 5
+  refineInputAmount: 1
+  refineOutputAmount: 1

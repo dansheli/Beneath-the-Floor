@@ -1,0 +1,145 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2293270835ef95f48941576a41164995, type: 3}
+  m_Name: ResourceDropConfig
+  m_EditorClassIdentifier: 
+  defaultPrefab: {fileID: 0}
+  defaultColor: {r: 0.6, g: 0.5, b: 0.4, a: 1}
+  defaultScale: 1
+  entries:
+  - resourceType: 4
+    prefab: {fileID: 6784286371878061873, guid: 1c88f2485731b1d40a57e1371934d3a8,
+      type: 3}
+    overrideColor: {r: 1, g: 1, b: 1, a: 1}
+    scale: 1
+  - resourceType: 9
+    prefab: {fileID: 8434366942491422108, guid: 1d139eb57f0b7534aa0e419395f9656f,
+      type: 3}
+    overrideColor: {r: 1, g: 1, b: 1, a: 1}
+    scale: 1
+  - resourceType: 5
+    prefab: {fileID: 3448104041387200766, guid: 27eb47dfb1edc4e4a81192a082c750b5,
+      type: 3}
+    overrideColor: {r: 1, g: 1, b: 1, a: 1}
+    scale: 1
+  - resourceType: 10
+    prefab: {fileID: 8093936140404856377, guid: b3ee700366c88e6469f741e7a381d5be,
+      type: 3}
+    overrideColor: {r: 1, g: 1, b: 1, a: 1}
+    scale: 1
+  - resourceType: 17
+    prefab: {fileID: 1313005939444275324, guid: c81298e33031bc049976c114169f8e05,
+      type: 3}
+    overrideColor: {r: 1, g: 1, b: 1, a: 1}
+    scale: 1
+  - resourceType: 24
+    prefab: {fileID: 5783462540661290307, guid: c0ff1e30f73765f42947ca11ba0929d9,
+      type: 3}
+    overrideColor: {r: 1, g: 1, b: 1, a: 1}
+    scale: 1
+  - resourceType: 11
+    prefab: {fileID: 7578362967439780783, guid: 2eb3dcca15ce7604d91360a3f3595242,
+      type: 3}
+    overrideColor: {r: 1, g: 1, b: 1, a: 1}
+    scale: 1
+  - resourceType: 15
+    prefab: {fileID: 4302321271234423907, guid: 79d699d0d68ca4c4fb3617630a7b291f,
+      type: 3}
+    overrideColor: {r: 1, g: 1, b: 1, a: 1}
+    scale: 1
+  - resourceType: 19
+    prefab: {fileID: 2094262519620079901, guid: 642d51d6adcf2254a8937abaef788818,
+      type: 3}
+    overrideColor: {r: 1, g: 1, b: 1, a: 1}
+    scale: 1
+  - resourceType: 16
+    prefab: {fileID: 6429246083184743049, guid: 3a8f710be3407be4f89e7e3eb38029de,
+      type: 3}
+    overrideColor: {r: 1, g: 1, b: 1, a: 1}
+    scale: 1
+  - resourceType: 18
+    prefab: {fileID: 2350952174603173714, guid: 1f3d64e91fe9d8a438b80602e98b5a8a,
+      type: 3}
+    overrideColor: {r: 1, g: 1, b: 1, a: 1}
+    scale: 1
+  - resourceType: 22
+    prefab: {fileID: 5769215451678539931, guid: e55daab2b19bc1e43bf429ab3c22edaf,
+      type: 3}
+    overrideColor: {r: 1, g: 1, b: 1, a: 1}
+    scale: 1
+  - resourceType: 23
+    prefab: {fileID: 594733659302506480, guid: 33448b8f5482fe4439aa51ea142002db, type: 3}
+    overrideColor: {r: 1, g: 1, b: 1, a: 1}
+    scale: 1
+  - resourceType: 26
+    prefab: {fileID: 4528448535077217875, guid: a04c2002b6e4c094fadbe7979fb1f004,
+      type: 3}
+    overrideColor: {r: 1, g: 1, b: 1, a: 1}
+    scale: 1
+  - resourceType: 20
+    prefab: {fileID: 7119928537215654400, guid: b16c6e2e695b8154aafa4d43ed568354,
+      type: 3}
+    overrideColor: {r: 1, g: 1, b: 1, a: 1}
+    scale: 1
+  - resourceType: 21
+    prefab: {fileID: 7845282009907896598, guid: a39f9189adcfbe949a22bab48390c947,
+      type: 3}
+    overrideColor: {r: 1, g: 1, b: 1, a: 1}
+    scale: 1
+  - resourceType: 14
+    prefab: {fileID: 1554930865580470037, guid: 323a7e03d8429814e954a898d3b532c0,
+      type: 3}
+    overrideColor: {r: 1, g: 1, b: 1, a: 1}
+    scale: 1
+  - resourceType: 1
+    prefab: {fileID: 7483131514070886631, guid: 41277fe4c29880e4a89706b65971d6ca,
+      type: 3}
+    overrideColor: {r: 1, g: 1, b: 1, a: 1}
+    scale: 1
+  - resourceType: 3
+    prefab: {fileID: 7985677044989406565, guid: f762ca18fd734894cb6b9a63f9118783,
+      type: 3}
+    overrideColor: {r: 1, g: 1, b: 1, a: 1}
+    scale: 1
+  - resourceType: 2
+    prefab: {fileID: 458372991607279499, guid: 9cb7521ed28ebd64b8818e795b8227ce, type: 3}
+    overrideColor: {r: 1, g: 1, b: 1, a: 1}
+    scale: 1
+  - resourceType: 7
+    prefab: {fileID: 7952326163140828990, guid: 3df61daac5b22004fa8b2713c1e412cf,
+      type: 3}
+    overrideColor: {r: 1, g: 1, b: 1, a: 1}
+    scale: 1
+  - resourceType: 8
+    prefab: {fileID: 6604740707890616057, guid: 4baede189a48e5d4b8b709e8c64e581b,
+      type: 3}
+    overrideColor: {r: 1, g: 1, b: 1, a: 1}
+    scale: 1
+  - resourceType: 6
+    prefab: {fileID: 2739982579689204914, guid: c435f98b0b399704f82c4981b00ce823,
+      type: 3}
+    overrideColor: {r: 1, g: 1, b: 1, a: 1}
+    scale: 1
+  - resourceType: 12
+    prefab: {fileID: 8147261180010173489, guid: 768d715f504472945bf7771411bdf211,
+      type: 3}
+    overrideColor: {r: 1, g: 1, b: 1, a: 1}
+    scale: 1
+  - resourceType: 13
+    prefab: {fileID: 804576811593558307, guid: c4a9d5d492430c64786face7655c09a9, type: 3}
+    overrideColor: {r: 1, g: 1, b: 1, a: 1}
+    scale: 1
+  - resourceType: 25
+    prefab: {fileID: 8718258085904756827, guid: 0acc88d1f8bda0d4da7a404633f271ba,
+      type: 3}
+    overrideColor: {r: 1, g: 1, b: 1, a: 1}
+    scale: 1

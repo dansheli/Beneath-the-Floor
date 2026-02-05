@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abbe4800fc748cf4ebe1a4b29601fcaf, type: 3}
+  m_Name: Mission_03_CollectDust
+  m_EditorClassIdentifier:
+  missionId: collect_dust_and_sell
+  missionName: Collect and Sell Dust
+  objectiveText: Collect 15 dust and sell it at the trade terminal.
+  completionTrigger: 8
+  showMarker: 1
+  markerTargetTag:
+  markerTargetName: TradeTerminal
+  rewardType: 0
+  helpText:
+  helpTextHideTrigger: 0
+  completionMessage:
+  completionMessageDuration: 3
+  centeredPopupMessage: Now you can start upgrading
+  centeredPopupDuration: 4
+  secondaryObjectiveText:
+  wrongUpgradeToastMessage:
+  requiredDigCount: 0
+  hideMarkerOnFirstDig: 0
+  firstDigPopupMessage:
+  firstDigPopupDuration: 4
+  requiredResourceCount: 15
+  resourceCounterLabel: Dust
+  resourceThresholdCrosshairHint: Go Up Press F
+  crosshairHintHideTrigger: 3

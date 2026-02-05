@@ -1,0 +1,32 @@
+AtmosphericHouse Asset Diet - Cleanup Summary
+=============================================
+
+Date: 2024-12-20
+Original Size: 6.1 GB
+Final Size: 3.0 GB
+Reduction: 3.1 GB (51%)
+
+DELETED FOLDERS:
+- HDRP/ (242MB) - Not needed for URP project
+- BuiltIn_RP/ (122KB) - Not needed for URP project
+- Scenes/ (197MB) - Demo scenes, we have our own
+- Textures/Worn/ (2.4GB) - Weathered texture variants
+- Textures/LightCookies/ (55MB) - Light cookie textures
+- URP/ (236MB) - URP-specific materials (using custom)
+- Readme/ (9KB) - Documentation
+- Sky/ (14KB) - Sky assets
+
+KEPT FOLDERS:
+- Textures/Clean/ (1.7GB) - Main clean textures
+- Textures/Multiuse/ (1.3GB) - REQUIRED for floors/walls/ceilings
+- Meshes/ (59MB) - 3D models
+- Materials/ (2.6MB) - Materials
+- Prefabs/ (6.3MB) - Prefabs
+- Colliders/ (2.9MB) - Collision meshes
+- Animations/ (159KB) - Door animations
+- Animators/ (114KB) - Animator controllers
+- Scripts/ (283KB) - Helper scripts
+
+TO RESTORE:
+Re-download "Atmospheric House" from Unity Asset Store
+and reimport only needed folders.

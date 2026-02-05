@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<linker>
+    <!-- Preserve all runtime-initialized classes to prevent code stripping in builds -->
+    <assembly fullname="Assembly-CSharp">
+        <type fullname="BeneathTheFloor.UI.ControlsHintUI" preserve="all"/>
+        <type fullname="BeneathTheFloor.UI.DepthHUDSetup" preserve="all"/>
+        <type fullname="BeneathTheFloor.Economy.BagValueHUD" preserve="all"/>
+        <type fullname="BeneathTheFloor.Debug.DebugHUDSpawner" preserve="all"/>
+        <type fullname="BeneathTheFloor.Debug.DebugCreditsUI" preserve="all"/>
+    </assembly>
+</linker>

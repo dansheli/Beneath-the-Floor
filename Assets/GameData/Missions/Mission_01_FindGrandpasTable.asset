@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abbe4800fc748cf4ebe1a4b29601fcaf, type: 3}
+  m_Name: Mission_01_FindGrandpasTable
+  m_EditorClassIdentifier: 
+  missionId: find_grandpas_table
+  missionName: Find Grandpa's Legacy
+  objectiveText: 'Go look for what grandpa left for you.
+
+
+    Scan the area around
+    his table.'
+  completionTrigger: 1
+  showMarker: 1
+  markerTargetTag:
+  markerTargetName:
+  rewardType: 1
+  helpText: 
+  helpTextHideTrigger: 0
+  completionMessage:
+  completionMessageDuration: 3
+  centeredPopupMessage: You received your first tool, start digging!
+  centeredPopupDuration: 4
+  secondaryObjectiveText:
+  wrongUpgradeToastMessage:

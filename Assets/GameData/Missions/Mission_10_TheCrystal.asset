@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abbe4800fc748cf4ebe1a4b29601fcaf, type: 3}
+  m_Name: Mission_10_TheCrystal
+  m_EditorClassIdentifier:
+  missionId: the_crystal
+  missionName: The Crystal
+  objectiveText: 'What is the crystal?
+
+    This one is calling me.'
+  completionTrigger: 5
+  showMarker: 1
+  markerTargetTag:
+  markerTargetName: Crystal
+  rewardType: 0
+  helpText:
+  helpTextHideTrigger: 0
+  completionMessage:
+  completionMessageDuration: 3
+  centeredPopupMessage:
+  centeredPopupDuration: 4
+  secondaryObjectiveText:
+  wrongUpgradeToastMessage:
+  requiredDigCount: 0
+  hideMarkerOnFirstDig: 0
+  firstDigPopupMessage:
+  firstDigPopupDuration: 4
+  requiredResourceCount: 0
+  resourceCounterLabel: Resources
+  toolPowerUpgradePopup:
+  energyUpgradePopup:
+  conditionalPopupDuration: 4
+  crosshairHintText:
+  crosshairHintHideTrigger: 0
+  lockUpgradesExceptWinch: 0
+  requiredDepth: 0
+  useSubtleMarker: 1

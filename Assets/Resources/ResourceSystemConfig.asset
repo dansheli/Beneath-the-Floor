@@ -1,0 +1,416 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7f054ed99dcbbf4ca91503df00e1827, type: 3}
+  m_Name: ResourceSystemConfig
+  m_EditorClassIdentifier: 
+  resources:
+  - resourceId: stone
+    displayName: Stone
+    icon: {fileID: 21300000, guid: f67167ae341961040a51a0cb0b5dff0b, type: 3}
+    resourceColor: {r: 1, g: 1, b: 1, a: 0}
+    creditValuePerUnit: 4
+    minDepth: 0
+    maxDepth: 15
+    tiers:
+    - tierName: 1
+      nodePrefab: {fileID: 2071383646464312640, guid: a0ae7861aa29a774eb835ddaeaf7ecee,
+        type: 3}
+      nodePrefabScale: 5
+      pickupPrefab: {fileID: 8454900145487014224, guid: 254c9dc11d4eb9b4b9274894885deb27,
+        type: 3}
+      pickupPrefabScale: 1
+      yieldAmount: 3
+      nodeRadius: 0.3
+      exposureRadius: 0.3
+      crumbleThreshold: 0.5
+    - tierName: 2
+      nodePrefab: {fileID: 2071383646464312640, guid: a0ae7861aa29a774eb835ddaeaf7ecee,
+        type: 3}
+      nodePrefabScale: 7
+      pickupPrefab: {fileID: 8454900145487014224, guid: 254c9dc11d4eb9b4b9274894885deb27,
+        type: 3}
+      pickupPrefabScale: 1
+      yieldAmount: 6
+      nodeRadius: 0.6
+      exposureRadius: 0.6
+      crumbleThreshold: 0.5
+    - tierName: 3
+      nodePrefab: {fileID: 2071383646464312640, guid: a0ae7861aa29a774eb835ddaeaf7ecee,
+        type: 3}
+      nodePrefabScale: 10
+      pickupPrefab: {fileID: 8454900145487014224, guid: 254c9dc11d4eb9b4b9274894885deb27,
+        type: 3}
+      pickupPrefabScale: 1
+      yieldAmount: 10
+      nodeRadius: 0.9
+      exposureRadius: 0.9
+      crumbleThreshold: 0.5
+    - tierName: 4
+      nodePrefab: {fileID: 2071383646464312640, guid: a0ae7861aa29a774eb835ddaeaf7ecee,
+        type: 3}
+      nodePrefabScale: 14
+      pickupPrefab: {fileID: 8454900145487014224, guid: 254c9dc11d4eb9b4b9274894885deb27,
+        type: 3}
+      pickupPrefabScale: 1
+      yieldAmount: 15
+      nodeRadius: 1.3
+      exposureRadius: 1
+      crumbleThreshold: 0.5
+    debugLogging: 1
+  - resourceId: iron
+    displayName: iron
+    icon: {fileID: 21300000, guid: 7ab5a0861cd7c33448763597f226a316, type: 3}
+    resourceColor: {r: 1, g: 1, b: 1, a: 0}
+    creditValuePerUnit: 10
+    minDepth: 0
+    maxDepth: 25
+    tiers:
+    - tierName: 1
+      nodePrefab: {fileID: 345023932590580404, guid: 867cc0e9a0f5a424cab125fe856e7b12,
+        type: 3}
+      nodePrefabScale: 5
+      pickupPrefab: {fileID: 3159392432209984012, guid: 0bc5566eb33c31f4b9123194ec548faa,
+        type: 3}
+      pickupPrefabScale: 1
+      yieldAmount: 3
+      nodeRadius: 0.3
+      exposureRadius: 0.3
+      crumbleThreshold: 0.5
+    - tierName: 2
+      nodePrefab: {fileID: 345023932590580404, guid: 867cc0e9a0f5a424cab125fe856e7b12,
+        type: 3}
+      nodePrefabScale: 7
+      pickupPrefab: {fileID: 3159392432209984012, guid: 0bc5566eb33c31f4b9123194ec548faa,
+        type: 3}
+      pickupPrefabScale: 1
+      yieldAmount: 6
+      nodeRadius: 0.6
+      exposureRadius: 0.6
+      crumbleThreshold: 0.5
+    - tierName: 3
+      nodePrefab: {fileID: 345023932590580404, guid: 867cc0e9a0f5a424cab125fe856e7b12,
+        type: 3}
+      nodePrefabScale: 10
+      pickupPrefab: {fileID: 3159392432209984012, guid: 0bc5566eb33c31f4b9123194ec548faa,
+        type: 3}
+      pickupPrefabScale: 1
+      yieldAmount: 10
+      nodeRadius: 0.9
+      exposureRadius: 0.9
+      crumbleThreshold: 0.5
+    - tierName: 4
+      nodePrefab: {fileID: 345023932590580404, guid: 867cc0e9a0f5a424cab125fe856e7b12,
+        type: 3}
+      nodePrefabScale: 14
+      pickupPrefab: {fileID: 3159392432209984012, guid: 0bc5566eb33c31f4b9123194ec548faa,
+        type: 3}
+      pickupPrefabScale: 1
+      yieldAmount: 15
+      nodeRadius: 1.3
+      exposureRadius: 1
+      crumbleThreshold: 0.5
+    debugLogging: 1
+  - resourceId: Coal
+    displayName: Coal
+    icon: {fileID: 21300000, guid: 8e3d0156ac851be4b8b4fd87cfb281f9, type: 3}
+    resourceColor: {r: 1, g: 1, b: 1, a: 0}
+    creditValuePerUnit: 14
+    minDepth: 15
+    maxDepth: 30
+    tiers:
+    - tierName: 1
+      nodePrefab: {fileID: 3658958254454595358, guid: ab954ce1430954945ae7f5f138ddf616,
+        type: 3}
+      nodePrefabScale: 5
+      pickupPrefab: {fileID: 4424852174873305484, guid: e665ae308270d57419d588c3de849c87,
+        type: 3}
+      pickupPrefabScale: 1
+      yieldAmount: 3
+      nodeRadius: 0.3
+      exposureRadius: 0.3
+      crumbleThreshold: 0.5
+    - tierName: 2
+      nodePrefab: {fileID: 3658958254454595358, guid: ab954ce1430954945ae7f5f138ddf616,
+        type: 3}
+      nodePrefabScale: 7
+      pickupPrefab: {fileID: 4424852174873305484, guid: e665ae308270d57419d588c3de849c87,
+        type: 3}
+      pickupPrefabScale: 1
+      yieldAmount: 6
+      nodeRadius: 0.6
+      exposureRadius: 0.6
+      crumbleThreshold: 0.5
+    - tierName: 3
+      nodePrefab: {fileID: 3658958254454595358, guid: ab954ce1430954945ae7f5f138ddf616,
+        type: 3}
+      nodePrefabScale: 10
+      pickupPrefab: {fileID: 4424852174873305484, guid: e665ae308270d57419d588c3de849c87,
+        type: 3}
+      pickupPrefabScale: 1
+      yieldAmount: 10
+      nodeRadius: 0.9
+      exposureRadius: 0.9
+      crumbleThreshold: 0.5
+    - tierName: 4
+      nodePrefab: {fileID: 3658958254454595358, guid: ab954ce1430954945ae7f5f138ddf616,
+        type: 3}
+      nodePrefabScale: 14
+      pickupPrefab: {fileID: 4424852174873305484, guid: e665ae308270d57419d588c3de849c87,
+        type: 3}
+      pickupPrefabScale: 1
+      yieldAmount: 15
+      nodeRadius: 1.3
+      exposureRadius: 1
+      crumbleThreshold: 0.5
+    debugLogging: 1
+  - resourceId: Copper
+    displayName: Copper
+    icon: {fileID: 21300000, guid: cdb45c37734c7bd47ac9b9cbe0491036, type: 3}
+    resourceColor: {r: 1, g: 1, b: 1, a: 0}
+    creditValuePerUnit: 24
+    minDepth: 20
+    maxDepth: 50
+    tiers:
+    - tierName: 1
+      nodePrefab: {fileID: 1987386272331270954, guid: de789cbef28e6024182273d7ede9b2b6,
+        type: 3}
+      nodePrefabScale: 5
+      pickupPrefab: {fileID: 2799863610869339284, guid: 592cb73c9c8a9bd41a9b63c92cccf93c,
+        type: 3}
+      pickupPrefabScale: 1
+      yieldAmount: 3
+      nodeRadius: 0.3
+      exposureRadius: 0.3
+      crumbleThreshold: 0.5
+    - tierName: 2
+      nodePrefab: {fileID: 1987386272331270954, guid: de789cbef28e6024182273d7ede9b2b6,
+        type: 3}
+      nodePrefabScale: 7
+      pickupPrefab: {fileID: 2799863610869339284, guid: 592cb73c9c8a9bd41a9b63c92cccf93c,
+        type: 3}
+      pickupPrefabScale: 1
+      yieldAmount: 6
+      nodeRadius: 0.6
+      exposureRadius: 0.6
+      crumbleThreshold: 0.5
+    - tierName: 3
+      nodePrefab: {fileID: 1987386272331270954, guid: de789cbef28e6024182273d7ede9b2b6,
+        type: 3}
+      nodePrefabScale: 10
+      pickupPrefab: {fileID: 2799863610869339284, guid: 592cb73c9c8a9bd41a9b63c92cccf93c,
+        type: 3}
+      pickupPrefabScale: 1
+      yieldAmount: 10
+      nodeRadius: 0.9
+      exposureRadius: 0.9
+      crumbleThreshold: 0.5
+    - tierName: 4
+      nodePrefab: {fileID: 1987386272331270954, guid: de789cbef28e6024182273d7ede9b2b6,
+        type: 3}
+      nodePrefabScale: 14
+      pickupPrefab: {fileID: 2799863610869339284, guid: 592cb73c9c8a9bd41a9b63c92cccf93c,
+        type: 3}
+      pickupPrefabScale: 1
+      yieldAmount: 15
+      nodeRadius: 1.3
+      exposureRadius: 1
+      crumbleThreshold: 0.5
+    debugLogging: 1
+  - resourceId: gold
+    displayName: Gold
+    icon: {fileID: 21300000, guid: 42a016ad8eab0214986fdbc82a969338, type: 3}
+    resourceColor: {r: 1, g: 0.84, b: 0, a: 1}
+    creditValuePerUnit: 75
+    minDepth: 30
+    maxDepth: 80
+    tiers:
+    - tierName: 1
+      nodePrefab: {fileID: 4483099586195484722, guid: c87ae00a691abc646ad0836b3115781c,
+        type: 3}
+      nodePrefabScale: 17
+      pickupPrefab: {fileID: 1924665597246396091, guid: e94da3b696f65c6418608bd4b810785c,
+        type: 3}
+      pickupPrefabScale: 5
+      yieldAmount: 3
+      nodeRadius: 0.3
+      exposureRadius: 0.3
+      crumbleThreshold: 0.5
+    - tierName: 2
+      nodePrefab: {fileID: 4483099586195484722, guid: c87ae00a691abc646ad0836b3115781c,
+        type: 3}
+      nodePrefabScale: 20
+      pickupPrefab: {fileID: 1924665597246396091, guid: e94da3b696f65c6418608bd4b810785c,
+        type: 3}
+      pickupPrefabScale: 5
+      yieldAmount: 6
+      nodeRadius: 0.6
+      exposureRadius: 0.6
+      crumbleThreshold: 0.5
+    - tierName: 3
+      nodePrefab: {fileID: 4483099586195484722, guid: c87ae00a691abc646ad0836b3115781c,
+        type: 3}
+      nodePrefabScale: 23
+      pickupPrefab: {fileID: 1924665597246396091, guid: e94da3b696f65c6418608bd4b810785c,
+        type: 3}
+      pickupPrefabScale: 5
+      yieldAmount: 10
+      nodeRadius: 0.9
+      exposureRadius: 0.9
+      crumbleThreshold: 0.5
+    - tierName: 4
+      nodePrefab: {fileID: 4483099586195484722, guid: c87ae00a691abc646ad0836b3115781c,
+        type: 3}
+      nodePrefabScale: 25
+      pickupPrefab: {fileID: 1924665597246396091, guid: e94da3b696f65c6418608bd4b810785c,
+        type: 3}
+      pickupPrefabScale: 5
+      yieldAmount: 15
+      nodeRadius: 1.3
+      exposureRadius: 1
+      crumbleThreshold: 0.5
+    debugLogging: 1
+  depthLayers:
+  - layerName: FirstLayer
+    minDepth: 0
+    maxDepth: 15
+    maxTierAllowed: 4
+    availableResources:
+    - resourceIndex: 0
+      spawnWeight: 70
+      enabled: 1
+      maxTierOverride: 4
+    - resourceIndex: 1
+      spawnWeight: 30
+      enabled: 1
+      maxTierOverride: 4
+    nodesPerChunkOverride: 0
+  - layerName: SecondLayer
+    minDepth: 15
+    maxDepth: 25
+    maxTierAllowed: 4
+    availableResources:
+    - resourceIndex: 1
+      spawnWeight: 50
+      enabled: 1
+      maxTierOverride: 4
+    - resourceIndex: 2
+      spawnWeight: 30
+      enabled: 1
+      maxTierOverride: 4
+    - resourceIndex: 3
+      spawnWeight: 20
+      enabled: 1
+      maxTierOverride: 4
+    nodesPerChunkOverride: 0
+  - layerName: ThirdLayer
+    minDepth: 25
+    maxDepth: 30
+    maxTierAllowed: 4
+    availableResources:
+    - resourceIndex: 2
+      spawnWeight: 60
+      enabled: 1
+      maxTierOverride: 4
+    - resourceIndex: 3
+      spawnWeight: 40
+      enabled: 1
+      maxTierOverride: 4
+    nodesPerChunkOverride: 0
+  - layerName: FourthLayer
+    minDepth: 30
+    maxDepth: 80
+    maxTierAllowed: 4
+    availableResources:
+    - resourceIndex: 3
+      spawnWeight: 30
+      enabled: 1
+      maxTierOverride: 4
+    - resourceIndex: 4
+      spawnWeight: 70
+      enabled: 1
+      maxTierOverride: 4
+    nodesPerChunkOverride: 0
+  tier1BaseChance: 70
+  tier2BaseChance: 20
+  tier3BaseChance: 8
+  tier4BaseChance: 2
+  baseDustPerMass: 10
+  dustSellValue: 1
+  depthDustMultipliers:
+  - 1
+  - 1.5
+  - 2
+  - 2.5
+  - 3
+  - 4
+  nodesPerChunk: 18
+  minNodeRadius: 0.8
+  maxNodeRadius: 1.5
+  nodeRevealSampleCount: 12
+  breakExposureThreshold: 0.7
+  minNodeDepth: 0
+  tierMinDepths:
+  - 0
+  - 5
+  - 10
+  - 15
+  worldSeed: 0
+  nodePlacementAttempts: 60
+  nodeEdgeMargin: 0.5
+  nodeSpawnMargin: 2
+  minNodeDistance: 1.8
+  nodeVisualScale: 10
+  pickupScale: 1.5
+  tierDropCounts: 03000000060000000a0000000f000000
+  tierWeightsByDepth:
+  - weights:
+    - 0.8
+    - 0.15
+    - 0.05
+    - 0
+  - weights:
+    - 0.6
+    - 0.3
+    - 0.08
+    - 0.02
+  - weights:
+    - 0.4
+    - 0.4
+    - 0.15
+    - 0.05
+  - weights:
+    - 0.2
+    - 0.4
+    - 0.3
+    - 0.1
+  - weights:
+    - 0.1
+    - 0.3
+    - 0.4
+    - 0.2
+  - weights:
+    - 0.05
+    - 0.2
+    - 0.4
+    - 0.35
+  tier1VisualPrefab: {fileID: 0}
+  tier1PickupPrefab: {fileID: 0}
+  tier2VisualPrefab: {fileID: 0}
+  tier2PickupPrefab: {fileID: 0}
+  tier3VisualPrefab: {fileID: 0}
+  tier3PickupPrefab: {fileID: 0}
+  tier4VisualPrefab: {fileID: 0}
+  tier4PickupPrefab: {fileID: 0}
+  nodeVisualScaleMultiplier: 5
+  pickupPieceScaleMultiplier: 1
+  nodeVisualPrefabs: []
+  pickupPiecePrefabs: []

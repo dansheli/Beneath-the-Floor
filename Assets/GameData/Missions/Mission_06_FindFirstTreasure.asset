@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abbe4800fc748cf4ebe1a4b29601fcaf, type: 3}
+  m_Name: Mission_06_FindFirstTreasure
+  m_EditorClassIdentifier:
+  missionId: find_first_treasure
+  missionName: Find First Treasure
+  objectiveText: 'Use the radar to find buried treasure.
+
+    Hold Q to activate it.'
+  completionTrigger: 14
+  showMarker: 1
+  markerTargetTag: TreasureChest
+  markerTargetName: TreasureChest_1_020013
+  rewardType: 0
+  helpText: 'The radar will point toward hidden treasures.
+
+    Press E to open when you find one.'
+  helpTextHideTrigger: 0
+  completionMessage: You found the treasure!
+  completionMessageDuration: 3
+  centeredPopupMessage: 'Great job! You found your first buried treasure.
+
+    There may be more hidden underground.'
+  centeredPopupDuration: 5
+  secondaryObjectiveText:
+  wrongUpgradeToastMessage:
+  requiredDigCount: 0
+  hideMarkerOnFirstDig: 1
+  firstDigPopupMessage:
+  firstDigPopupDuration: 4
+  requiredResourceCount: 0
+  resourceCounterLabel: Resources
+  toolPowerUpgradePopup:
+  energyUpgradePopup:
+  conditionalPopupDuration: 4
+  crosshairHintText: Press Q to activate the Scanner
+  crosshairHintHideTrigger: 2

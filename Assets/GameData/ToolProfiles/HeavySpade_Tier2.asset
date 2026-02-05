@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38bb642cf9a06e2469785013dbaaea5d, type: 3}
+  m_Name: HeavySpade_Tier2
+  m_EditorClassIdentifier: 
+  toolId: heavyspade_tier2
+  displayName: Iron Heavy Spade
+  digRadius: 0.7
+  digPower: 1.6
+  digDuration: 0.45
+  inputMode: 0
+  energyCostPerDig: 6
+  maxDigDepth: 22
+  resourceEfficiency: 1.6
+  hardnessRating: 2.3
+  icon: {fileID: 0}

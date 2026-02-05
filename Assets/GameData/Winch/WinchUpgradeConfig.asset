@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a254a2ca5e86284a8969f2ab9de9f6e, type: 3}
+  m_Name: WinchUpgradeConfig
+  m_EditorClassIdentifier:
+  tiers:
+  - tierName: Frayed Rope
+    maxCableLength: 10
+    description: Old rope from the attic. Barely holds.
+  - tierName: Hemp Cable
+    maxCableLength: 15
+    description: Stronger woven hemp cable.
+  - tierName: Steel Cable
+    maxCableLength: 20
+    description: Industrial steel cable.
+  - tierName: Reinforced Cable
+    maxCableLength: 25
+    description: Double-braided steel.
+  - tierName: Master Cable
+    maxCableLength: 30
+    description: Grandfather's finest cable.
+  softZoneStartFraction: 0.85
+  maxDampingStrength: 0.8
+  pullSpeed: 2
+  tensionSpeedMultiplier: 0.1

@@ -1,0 +1,79 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: TriplanarSoil
+  m_Shader: {fileID: 4800000, guid: 204e0502c56ecf440a9345c0eb9ed5e0, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 1
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: 2000
+  stringTagMap:
+    RenderType: Opaque
+  disabledShaderPasses: []
+  m_LockedProperties:
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _DirtTex:
+        m_Texture: {fileID: 2800000, guid: 2a95d8a7367ed224cadb9493713e4eb0, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DirtBumpMap:
+        m_Texture: {fileID: 2800000, guid: e9cce297bbba9b64dbb7603e4567e00d, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _RockTex:
+        m_Texture: {fileID: 2800000, guid: f437d40f074da92498cc93f0b3ff4aab, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _RockBumpMap:
+        m_Texture: {fileID: 2800000, guid: 72b8668f0c9253b458baa232bba78296, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailNormalMap:
+        m_Texture: {fileID: 2800000, guid: e9cce297bbba9b64dbb7603e4567e00d, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _TilingScale: 4.0
+    - _TriplanarSharpness: 5
+    - _NormalStrength: 1.4
+    - _WallRockBlendStrength: 1.8
+    - _WallSteepnessThreshold: 0.4
+    - _Smoothness: 0.08
+    - _Metallic: 0
+    - _MacroScale: 0.08
+    - _MacroStrength: 0.06
+    - _MacroRoughnessVar: 0.03
+    - _DetailTiling: 15.0
+    - _DetailNormalStrength: 0.35
+    - _DepthDarkenStrength: 0.15
+    - _DepthStart: -3.0
+    - _DepthRange: 100.0
+    - _CavityDarkenStrength: 0.25
+    - _CavityAOPower: 1.5
+    - _UseLayerColors: 1.0
+    - _LayerBlendDistance: 1.5
+    - _LayerColorStrength: 1.0
+    - _Layer1Depth: -8.0
+    - _Layer2Depth: -20.0
+    - _Layer3Depth: -40.0
+    m_Colors:
+    - _DirtColor: {r: 0.38, g: 0.28, b: 0.18, a: 1}
+    - _RockColor: {r: 0.35, g: 0.32, b: 0.28, a: 1}
+    - _Layer1Color: {r: 0.55, g: 0.35, b: 0.18, a: 1}
+    - _Layer2Color: {r: 0.75, g: 0.35, b: 0.08, a: 1}
+    - _Layer3Color: {r: 0.50, g: 0.48, b: 0.45, a: 1}
+    - _Layer4Color: {r: 0.25, g: 0.22, b: 0.30, a: 1}
+  m_BuildTextureStacks: []

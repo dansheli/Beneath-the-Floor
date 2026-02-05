@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5d7f194196e1a84698045b2d96880a0, type: 3}
+  m_Name: DiggerRobotConfig
+  m_EditorClassIdentifier: 
+  digRadius: 0.5
+  digStrength: 0.25
+  digInterval: 0.15
+  digReach: 0.6
+  moveSpeed: 1
+  breadcrumbSpacing: 1.5
+  robotMass: 20
+  robotFriction: 0.3
+  obstacleCheckRadius: 0.5
+  obstacleCheckDist: 2
+  terrainContactDist: 0.4
+  scanRange: 8
+  scanAngleStep: 10
+  digStopDistance: 0.5
+  scanInterval: 0.3
+  layerHeight: 1.8
+  holeDetectDepth: 2.5
+  layerClearTimeout: 15
+  digCycleDuration: 0.7
+  armOpenAngle: 15
+  armCloseAngle: -20
+  bodyTiltAngle: 10
+  ballRollFactor: 180
+  stuckTimeout: 5
+  stuckMinMove: 0.3
+  reverseTime: 1
+  maxBattery: 100
+  drainPerSecond: 0.3
+  drainPerDig: 2
+  lowBatteryThreshold: 0.15
+  rechargeRate: 25

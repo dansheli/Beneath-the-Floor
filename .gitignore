@@ -1,0 +1,77 @@
+# Unity generated folders
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+
+# Large Asset Store packages (re-download from Asset Store)
+Assets/AtmosphericHouse/
+Assets/Sci-Fi Insect Miner Beetle/
+Assets/animated_fps_hands_v3/
+Assets/Mining_Company/
+Assets/Industrial_Machine_Models/
+Assets/Octablade/
+Assets/UI Casual Soundpack/
+Assets/DungeonMusicPack/
+Assets/EndlessCaveAmbience/
+Assets/Footsteps - Essentials/
+Assets/Free UI Click Sound Effects Pack/
+Assets/TextMesh Pro/
+Assets/EKstudio/
+
+# Memory captures
+[Mm]emoryCaptures/
+
+# Recordings
+[Rr]ecordings/
+
+# Asset meta data
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+
+# Unity3D generated files
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# Unity Package Manager
+Packages/packages-lock.json
+
+# Builds
+*.apk
+*.aab
+*.unitypackage
+*.app
+
+# Crashlytics
+crashlytics-build.properties
+
+# Packed Addressables
+[Aa]ddressables/
+
+# Visual Studio cache
+.vs/
+
+# Rider
+.idea/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db

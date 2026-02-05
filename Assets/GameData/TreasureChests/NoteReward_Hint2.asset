@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2035d98e510d98c4ab434e6b47f83239, type: 3}
+  m_Name: NoteReward_Hint2
+  m_EditorClassIdentifier: 
+  rewardId: notereward_hint2
+  displayName: Torn Page
+  description: A page torn from a journal...
+  rewardType: 3
+  itemReward: {fileID: 0}
+  itemQuantity: 1
+  currencyAmount: 0
+  noteTitle: Journal Entry
+  noteContent: '"Day 47: I''ve found traces of copper at the second depth layer.
+    The radar helps, but I can hear something moving down there..."'
+  achievementId: 
+  customIcon: {fileID: 0}
+  rewardColor: {r: 0.9, g: 0.85, b: 0.7, a: 1}
+  rewardSound: {fileID: 0}
+  rewardVolume: 1

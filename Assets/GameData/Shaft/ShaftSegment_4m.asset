@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec9baea36c1b4d64bb1bacecded7e6b8, type: 3}
+  m_Name: ShaftSegment_4m
+  m_EditorClassIdentifier: 
+  segmentId: Segment_4m
+  height: 4
+  width: 12
+  thickness: 0.4
+  solidPrefab: {fileID: 8286155970335014221, guid: 9d825bd4fa549b545bed14a6f4cdf4cf,
+    type: 3}
+  openingPrefab: {fileID: 8258365310804783281, guid: b8f5e91d4d36d004096ea7589b077df3,
+    type: 3}
+  openingWidth: 4.5
+  openingHeight: 3.2
+  openingVerticalOffset: 0
