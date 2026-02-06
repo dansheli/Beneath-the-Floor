@@ -52,7 +52,7 @@ namespace BeneathTheFloor.Digging
 
         [Header("Manual Bounds (if boundsSource = Manual, or as fallback)")]
         [SerializeField] private Vector3 manualBoundsCenter = new Vector3(0, -53f, 0);
-        [SerializeField] private Vector3 manualBoundsSize = new Vector3(20f, 100f, 20f);
+        [SerializeField] private Vector3 manualBoundsSize = new Vector3(20f, 120f, 20f);
 
         [Tooltip("If Auto resolution fails, use manual bounds as fallback instead of failing.")]
         [SerializeField] private bool useManualAsFallback = true;
@@ -263,7 +263,7 @@ namespace BeneathTheFloor.Digging
             float sizeZ = innerMaxZ - innerMinZ;
 
             // Get depth from terrain manager or use default
-            float depth = 100f;
+            float depth = 120f;
             float basementFloorY = -3f;
             var terrainManager = FindObjectOfType<UndergroundTerrainManager>();
             if (terrainManager != null)

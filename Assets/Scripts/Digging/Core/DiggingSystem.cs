@@ -67,7 +67,7 @@ namespace BeneathTheFloor.Digging
         [Tooltip("Max dig depth for Tool 4 (Drill Pike) - all tiers")]
         [SerializeField] private float tool4MaxDepth = 50f;
         [Tooltip("Max dig depth for Tool 5 (Sonic Pulser) - all tiers")]
-        [SerializeField] private float tool5MaxDepth = 80f;
+        [SerializeField] private float tool5MaxDepth = 120f;
 
         [Header("Audio")]
         [Tooltip("Dig hit sounds (plays randomly on each dig).")]

@@ -353,13 +353,13 @@ namespace BeneathTheFloor.ResourceSystem
         /// </summary>
         public int GetLayerIndex(float depth)
         {
-            // Layer boundaries matching UndergroundResourceTable
-            if (depth < 15f) return 0;
-            if (depth < 35f) return 1;
-            if (depth < 65f) return 2;
-            if (depth < 105f) return 3;
-            if (depth < 155f) return 4;
-            return 5;
+            // Layer boundaries matching TerrainLayerSettings (6 visual layers)
+            if (depth < 20f) return 0;   // Topsoil: 0-20m
+            if (depth < 40f) return 1;   // Clay: 20-40m
+            if (depth < 60f) return 2;   // Slate: 40-60m
+            if (depth < 80f) return 3;   // Deep Rock: 60-80m
+            if (depth < 100f) return 4;  // Crystal Caverns: 80-100m
+            return 5;                     // The Core: 100-120m
         }
 
         /// <summary>

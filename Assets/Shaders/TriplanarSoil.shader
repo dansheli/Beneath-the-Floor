@@ -44,15 +44,20 @@ Shader "BeneathTheFloor/TriplanarSoil"
 
         [Header(Terrain Layers)]
         [Toggle] _UseLayerColors ("Enable Layer Colors", Float) = 1.0
-        _Layer1Color ("Layer 1 - Topsoil", Color) = (0.45, 0.30, 0.18, 1)
-        _Layer2Color ("Layer 2 - Clay", Color) = (0.65, 0.30, 0.08, 1)
-        _Layer3Color ("Layer 3 - Gravel", Color) = (0.38, 0.36, 0.34, 1)
-        _Layer4Color ("Layer 4 - Bedrock", Color) = (0.18, 0.18, 0.20, 1)
-        _Layer1Depth ("Layer 1 End (Y)", Float) = -8.0
-        _Layer2Depth ("Layer 2 End (Y)", Float) = -20.0
-        _Layer3Depth ("Layer 3 End (Y)", Float) = -40.0
-        _LayerBlendDistance ("Layer Blend Distance", Range(0.5, 5)) = 1.5
+        _Layer1Color ("Layer 1 - Topsoil", Color) = (0.55, 0.35, 0.18, 1)
+        _Layer2Color ("Layer 2 - Clay", Color) = (0.72, 0.38, 0.12, 1)
+        _Layer3Color ("Layer 3 - Slate", Color) = (0.45, 0.45, 0.48, 1)
+        _Layer4Color ("Layer 4 - Deep Rock", Color) = (0.25, 0.28, 0.38, 1)
+        _Layer5Color ("Layer 5 - Crystal", Color) = (0.35, 0.15, 0.50, 1)
+        _Layer6Color ("Layer 6 - Core", Color) = (0.10, 0.55, 0.55, 1)
+        _Layer1Depth ("Layer 1 End (Y)", Float) = -20.0
+        _Layer2Depth ("Layer 2 End (Y)", Float) = -40.0
+        _Layer3Depth ("Layer 3 End (Y)", Float) = -60.0
+        _Layer4Depth ("Layer 4 End (Y)", Float) = -80.0
+        _Layer5Depth ("Layer 5 End (Y)", Float) = -100.0
+        _LayerBlendDistance ("Layer Blend Distance", Range(0.5, 5)) = 2.0
         _LayerColorStrength ("Layer Color Strength", Range(0, 1)) = 1.0
+        _LayerEmissionStrength ("Deep Layer Glow", Range(0, 2)) = 0.8
     }
 
     SubShader
@@ -141,11 +146,16 @@ Shader "BeneathTheFloor/TriplanarSoil"
                 float4 _Layer2Color;
                 float4 _Layer3Color;
                 float4 _Layer4Color;
+                float4 _Layer5Color;
+                float4 _Layer6Color;
                 float _Layer1Depth;
                 float _Layer2Depth;
                 float _Layer3Depth;
+                float _Layer4Depth;
+                float _Layer5Depth;
                 float _LayerBlendDistance;
                 float _LayerColorStrength;
+                float _LayerEmissionStrength;
             CBUFFER_END
 
             // Simple 3D noise function for macro variation
@@ -251,51 +261,61 @@ Shader "BeneathTheFloor/TriplanarSoil"
                 return saturate(cavity);
             }
 
+            // Smooth step between two layer colors
+            float4 BlendLayers(float4 colorA, float4 colorB, float worldY, float boundary, float blend)
+            {
+                float t = saturate((boundary + blend - worldY) / (blend * 2.0));
+                return lerp(colorA, colorB, t);
+            }
+
             // Calculate layer color based on world Y position
             // Returns blended color between layers with smooth transitions
+            // Alpha channel stores emission intensity (0 for normal layers, >0 for glowing layers)
             float4 GetLayerColor(float worldY)
             {
-                // Smooth blend between layers
                 float blend = _LayerBlendDistance;
 
-                // Layer 1 (Topsoil) - above Layer1Depth
+                // Define emission per layer (0,0,0,0 for top layers, increasing for deep)
+                // We store emission factor in .a: 0=none, 1=full glow
+                float4 c1 = float4(_Layer1Color.rgb, 0.0);
+                float4 c2 = float4(_Layer2Color.rgb, 0.0);
+                float4 c3 = float4(_Layer3Color.rgb, 0.0);
+                float4 c4 = float4(_Layer4Color.rgb, 0.15);
+                float4 c5 = float4(_Layer5Color.rgb, 0.5);
+                float4 c6 = float4(_Layer6Color.rgb, 1.0);
+
+                // Layer 1 (Topsoil)
                 if (worldY > _Layer1Depth + blend)
-                {
-                    return _Layer1Color;
-                }
-                // Transition from Layer 1 to Layer 2
-                else if (worldY > _Layer1Depth - blend)
-                {
-                    float t = saturate((_Layer1Depth + blend - worldY) / (blend * 2.0));
-                    return lerp(_Layer1Color, _Layer2Color, t);
-                }
-                // Layer 2 (Clay) - between Layer1Depth and Layer2Depth
-                else if (worldY > _Layer2Depth + blend)
-                {
-                    return _Layer2Color;
-                }
-                // Transition from Layer 2 to Layer 3
-                else if (worldY > _Layer2Depth - blend)
-                {
-                    float t = saturate((_Layer2Depth + blend - worldY) / (blend * 2.0));
-                    return lerp(_Layer2Color, _Layer3Color, t);
-                }
-                // Layer 3 (Gravel) - between Layer2Depth and Layer3Depth
-                else if (worldY > _Layer3Depth + blend)
-                {
-                    return _Layer3Color;
-                }
-                // Transition from Layer 3 to Layer 4
-                else if (worldY > _Layer3Depth - blend)
-                {
-                    float t = saturate((_Layer3Depth + blend - worldY) / (blend * 2.0));
-                    return lerp(_Layer3Color, _Layer4Color, t);
-                }
-                // Layer 4 (Bedrock) - below Layer3Depth
-                else
-                {
-                    return _Layer4Color;
-                }
+                    return c1;
+                if (worldY > _Layer1Depth - blend)
+                    return BlendLayers(c1, c2, worldY, _Layer1Depth, blend);
+
+                // Layer 2 (Clay)
+                if (worldY > _Layer2Depth + blend)
+                    return c2;
+                if (worldY > _Layer2Depth - blend)
+                    return BlendLayers(c2, c3, worldY, _Layer2Depth, blend);
+
+                // Layer 3 (Slate)
+                if (worldY > _Layer3Depth + blend)
+                    return c3;
+                if (worldY > _Layer3Depth - blend)
+                    return BlendLayers(c3, c4, worldY, _Layer3Depth, blend);
+
+                // Layer 4 (Deep Rock)
+                if (worldY > _Layer4Depth + blend)
+                    return c4;
+                if (worldY > _Layer4Depth - blend)
+                    return BlendLayers(c4, c5, worldY, _Layer4Depth, blend);
+
+                // Layer 5 (Crystal Caverns)
+                if (worldY > _Layer5Depth + blend)
+                    return c5;
+                if (worldY > _Layer5Depth - blend)
+                    return BlendLayers(c5, c6, worldY, _Layer5Depth, blend);
+
+                // Layer 6 (The Core)
+                return c6;
             }
 
             Varyings vert(Attributes input)
@@ -334,6 +354,7 @@ Shader "BeneathTheFloor/TriplanarSoil"
                 float4 albedo = lerp(dirtAlbedo, rockAlbedo, layerBlend);
 
                 // === TERRAIN LAYER COLORS ===
+                float3 layerEmission = float3(0, 0, 0);
                 if (_UseLayerColors > 0.5)
                 {
                     float4 layerColor = GetLayerColor(input.positionWS.y);
@@ -343,6 +364,18 @@ Shader "BeneathTheFloor/TriplanarSoil"
                     float3 tintedColor = albedo.rgb * layerColor.rgb * 2.5;
                     float3 targetColor = lerp(tintedColor, directColor, 0.4);
                     albedo.rgb = lerp(albedo.rgb, targetColor, _LayerColorStrength);
+
+                    // Sci-fi glow for deep layers (emission stored in alpha)
+                    float emissionFactor = layerColor.a * _LayerEmissionStrength;
+                    if (emissionFactor > 0.0)
+                    {
+                        // Pulsing glow effect using world position noise
+                        float pulse = 0.85 + 0.15 * sin(_Time.y * 1.5 + input.positionWS.x * 0.7 + input.positionWS.z * 0.5);
+                        // Vein-like pattern for crystal/core layers
+                        float vein = saturate(noise3D(input.positionWS * 2.0) * 1.8 - 0.4);
+                        float glowMask = saturate(vein * 0.6 + 0.4);
+                        layerEmission = directColor * emissionFactor * pulse * glowMask;
+                    }
                 }
 
                 // === MACRO VARIATION ===
@@ -402,7 +435,7 @@ Shader "BeneathTheFloor/TriplanarSoil"
                 surfaceData.specular = float3(0, 0, 0);
                 surfaceData.smoothness = finalSmoothness;
                 surfaceData.normalTS = float3(0, 0, 1);
-                surfaceData.emission = float3(0, 0, 0);
+                surfaceData.emission = layerEmission;
                 surfaceData.occlusion = ao;
                 surfaceData.alpha = 1.0;
 

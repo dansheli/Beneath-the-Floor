@@ -31,11 +31,16 @@ namespace BeneathTheFloor.Digging
         private static readonly int Layer2Color = Shader.PropertyToID("_Layer2Color");
         private static readonly int Layer3Color = Shader.PropertyToID("_Layer3Color");
         private static readonly int Layer4Color = Shader.PropertyToID("_Layer4Color");
+        private static readonly int Layer5Color = Shader.PropertyToID("_Layer5Color");
+        private static readonly int Layer6Color = Shader.PropertyToID("_Layer6Color");
         private static readonly int Layer1Depth = Shader.PropertyToID("_Layer1Depth");
         private static readonly int Layer2Depth = Shader.PropertyToID("_Layer2Depth");
         private static readonly int Layer3Depth = Shader.PropertyToID("_Layer3Depth");
+        private static readonly int Layer4Depth = Shader.PropertyToID("_Layer4Depth");
+        private static readonly int Layer5Depth = Shader.PropertyToID("_Layer5Depth");
         private static readonly int LayerBlendDistance = Shader.PropertyToID("_LayerBlendDistance");
         private static readonly int LayerColorStrength = Shader.PropertyToID("_LayerColorStrength");
+        private static readonly int LayerEmissionStrength = Shader.PropertyToID("_LayerEmissionStrength");
 
         // Singleton
         private static TerrainLayerShaderUpdater _instance;
@@ -155,25 +160,19 @@ namespace BeneathTheFloor.Digging
                 return;
             }
 
-            // Set layer colors (up to 4 layers)
-            if (layers.Length > 0)
+            // Shader property arrays for clean iteration
+            int[] colorProps = { Layer1Color, Layer2Color, Layer3Color, Layer4Color, Layer5Color, Layer6Color };
+            int[] depthProps = { Layer1Depth, Layer2Depth, Layer3Depth, Layer4Depth, Layer5Depth };
+
+            // Set layer colors (up to 6 layers)
+            for (int i = 0; i < Mathf.Min(layers.Length, 6); i++)
             {
-                terrainMaterial.SetColor(Layer1Color, layers[0].primaryColor);
-                terrainMaterial.SetFloat(Layer1Depth, layers[0].depthEnd);
-            }
-            if (layers.Length > 1)
-            {
-                terrainMaterial.SetColor(Layer2Color, layers[1].primaryColor);
-                terrainMaterial.SetFloat(Layer2Depth, layers[1].depthEnd);
-            }
-            if (layers.Length > 2)
-            {
-                terrainMaterial.SetColor(Layer3Color, layers[2].primaryColor);
-                terrainMaterial.SetFloat(Layer3Depth, layers[2].depthEnd);
-            }
-            if (layers.Length > 3)
-            {
-                terrainMaterial.SetColor(Layer4Color, layers[3].primaryColor);
+                terrainMaterial.SetColor(colorProps[i], layers[i].primaryColor);
+                // Depth boundaries: layers 1-5 have a depthEnd boundary (layer 6 is "everything below")
+                if (i < 5 && i < depthProps.Length)
+                {
+                    terrainMaterial.SetFloat(depthProps[i], layers[i].depthEnd);
+                }
             }
 
             // Set blend distance
@@ -181,6 +180,9 @@ namespace BeneathTheFloor.Digging
 
             // Color strength (how much layer color affects terrain)
             terrainMaterial.SetFloat(LayerColorStrength, 1.0f);
+
+            // Emission strength for deep sci-fi glow
+            terrainMaterial.SetFloat(LayerEmissionStrength, 0.8f);
 
             if (showDebugInfo)
             {

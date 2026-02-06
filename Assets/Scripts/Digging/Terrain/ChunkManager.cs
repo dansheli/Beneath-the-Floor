@@ -27,7 +27,7 @@ namespace BeneathTheFloor.Digging
 
         [Header("World Bounds")]
         [Tooltip("Minimum chunk coordinate on each axis.")]
-        [SerializeField] private Vector3Int minChunkCoord = new Vector3Int(-4, -20, -4);
+        [SerializeField] private Vector3Int minChunkCoord = new Vector3Int(-4, -22, -4);
 
         [Tooltip("Maximum chunk coordinate on each axis.")]
         [SerializeField] private Vector3Int maxChunkCoord = new Vector3Int(4, 0, 4);

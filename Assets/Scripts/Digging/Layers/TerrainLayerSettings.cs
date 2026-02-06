@@ -50,45 +50,67 @@ namespace BeneathTheFloor.Digging
             {
                 layerName = "Topsoil",
                 depthStart = 0f,
-                depthEnd = -8f,
+                depthEnd = -20f,
                 hardness = 1.0f,
-                primaryColor = new Color(0.36f, 0.25f, 0.2f, 1f),    // Rich brown
-                secondaryColor = new Color(0.3f, 0.2f, 0.15f, 1f),
+                primaryColor = new Color(0.55f, 0.35f, 0.18f, 1f),   // Warm brown
+                secondaryColor = new Color(0.45f, 0.28f, 0.14f, 1f),
                 rockBlend = 0f,
-                particleColor = new Color(0.4f, 0.3f, 0.2f, 1f)
+                particleColor = new Color(0.6f, 0.4f, 0.2f, 1f)
             },
             new LayerDefinition
             {
                 layerName = "Clay",
-                depthStart = -8f,
-                depthEnd = -20f,
-                hardness = 1.8f,
-                primaryColor = new Color(0.55f, 0.27f, 0.08f, 1f),   // Orange-brown
-                secondaryColor = new Color(0.5f, 0.25f, 0.1f, 1f),
-                rockBlend = 0.1f,
-                particleColor = new Color(0.6f, 0.35f, 0.15f, 1f)
-            },
-            new LayerDefinition
-            {
-                layerName = "Gravel",
                 depthStart = -20f,
                 depthEnd = -40f,
-                hardness = 2.5f,
-                primaryColor = new Color(0.42f, 0.36f, 0.31f, 1f),   // Gray-brown
-                secondaryColor = new Color(0.35f, 0.3f, 0.25f, 1f),
-                rockBlend = 0.4f,
-                particleColor = new Color(0.5f, 0.45f, 0.4f, 1f)
+                hardness = 1.8f,
+                primaryColor = new Color(0.72f, 0.38f, 0.12f, 1f),   // Orange-brown
+                secondaryColor = new Color(0.60f, 0.30f, 0.10f, 1f),
+                rockBlend = 0.15f,
+                particleColor = new Color(0.75f, 0.42f, 0.15f, 1f)
             },
             new LayerDefinition
             {
-                layerName = "Bedrock",
+                layerName = "Slate",
                 depthStart = -40f,
+                depthEnd = -60f,
+                hardness = 2.5f,
+                primaryColor = new Color(0.45f, 0.45f, 0.48f, 1f),   // Cool gray stone
+                secondaryColor = new Color(0.38f, 0.38f, 0.42f, 1f),
+                rockBlend = 0.5f,
+                particleColor = new Color(0.50f, 0.50f, 0.52f, 1f)
+            },
+            new LayerDefinition
+            {
+                layerName = "Deep Rock",
+                depthStart = -60f,
+                depthEnd = -80f,
+                hardness = 3.5f,
+                primaryColor = new Color(0.25f, 0.28f, 0.38f, 1f),   // Dark blue-gray
+                secondaryColor = new Color(0.20f, 0.22f, 0.32f, 1f),
+                rockBlend = 0.7f,
+                particleColor = new Color(0.30f, 0.32f, 0.42f, 1f)
+            },
+            new LayerDefinition
+            {
+                layerName = "Crystal Caverns",
+                depthStart = -80f,
                 depthEnd = -100f,
-                hardness = 4.0f,
-                primaryColor = new Color(0.24f, 0.24f, 0.24f, 1f),   // Dark gray
-                secondaryColor = new Color(0.2f, 0.2f, 0.2f, 1f),
+                hardness = 4.5f,
+                primaryColor = new Color(0.35f, 0.15f, 0.50f, 1f),   // Deep purple / violet
+                secondaryColor = new Color(0.28f, 0.10f, 0.42f, 1f),
                 rockBlend = 0.8f,
-                particleColor = new Color(0.3f, 0.3f, 0.3f, 1f)
+                particleColor = new Color(0.50f, 0.20f, 0.65f, 1f)
+            },
+            new LayerDefinition
+            {
+                layerName = "The Core",
+                depthStart = -100f,
+                depthEnd = -120f,
+                hardness = 6.0f,
+                primaryColor = new Color(0.10f, 0.55f, 0.55f, 1f),   // Neon teal / cyan
+                secondaryColor = new Color(0.05f, 0.45f, 0.48f, 1f),
+                rockBlend = 0.9f,
+                particleColor = new Color(0.15f, 0.65f, 0.60f, 1f)
             }
         };
 

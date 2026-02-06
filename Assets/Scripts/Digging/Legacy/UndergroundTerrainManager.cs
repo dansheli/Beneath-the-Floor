@@ -29,7 +29,7 @@ namespace BeneathTheFloor.Digging
         public float horizontalExtent = 10f;
 
         [Tooltip("Maximum depth of the terrain (used if DigBoundsProvider not available).")]
-        public float maxDepthMeters = 100f;
+        public float maxDepthMeters = 120f;
 
         private void Awake()
         {
