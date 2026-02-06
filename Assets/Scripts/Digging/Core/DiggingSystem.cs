@@ -567,29 +567,42 @@ namespace BeneathTheFloor.Digging
                         Debug.Log("[DiggingSystem] Sonic Pulser: Charge started");
                 }
 
-                // Drain energy while charging
+                // Drain energy while charging (skip if charge maxed)
                 if (_sonicChargeStarted)
                 {
-                    float drainAmount = SONIC_CHARGE_ENERGY_PER_SECOND * Time.deltaTime;
+                    var toolVisual = HeldToolController.Instance?.GetCurrentToolVisual();
+                    bool chargeMaxed = toolVisual != null && toolVisual.IsChargeMaxed();
 
-                    if (!disableEnergyConsumption && energy != null)
+                    if (chargeMaxed)
                     {
-                        if (energy.HasEnergy(drainAmount))
+                        // Max charge reached - no energy drain, prevent energy regen until fired
+                        if (!disableEnergyConsumption && energy != null)
                         {
-                            energy.ConsumeEnergy(drainAmount);
                             energy.ResetRegenCooldown();
-                            _sonicChargeEnergySpent += drainAmount;
                         }
-                        else
-                        {
-                            // Out of energy - pause charge (ball stops growing)
-                            if (enableDebugLogs)
-                                Debug.Log("[DiggingSystem] Sonic Pulser: Energy depleted, pausing charge");
+                    }
+                    else
+                    {
+                        float drainAmount = SONIC_CHARGE_ENERGY_PER_SECOND * Time.deltaTime;
 
-                            var toolVisual = HeldToolController.Instance?.GetCurrentToolVisual();
-                            if (toolVisual != null)
+                        if (!disableEnergyConsumption && energy != null)
+                        {
+                            if (energy.HasEnergy(drainAmount))
                             {
-                                toolVisual.PauseCharge();
+                                energy.ConsumeEnergy(drainAmount);
+                                energy.ResetRegenCooldown();
+                                _sonicChargeEnergySpent += drainAmount;
+                            }
+                            else
+                            {
+                                // Out of energy - pause charge (ball stops growing)
+                                if (enableDebugLogs)
+                                    Debug.Log("[DiggingSystem] Sonic Pulser: Energy depleted, pausing charge");
+
+                                if (toolVisual != null)
+                                {
+                                    toolVisual.PauseCharge();
+                                }
                             }
                         }
                     }

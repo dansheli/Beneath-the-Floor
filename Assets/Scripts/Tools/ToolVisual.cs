@@ -83,7 +83,8 @@ namespace BeneathTheFloor.Tools
         // Sonic Pulser charge state
         private bool isReloading = false;
         private float reloadTimer = 0f;
-        private const float CHARGE_RATE = 2f; // Seconds per unit of charge (no cap)
+        private const float CHARGE_RATE = 2f; // Seconds per unit of charge
+        private const float CHARGE_MAX_SECONDS = 9f; // Hard cap - charge stops after this
         private Coroutine reloadCoroutine;
         private GameObject chargeBallObj; // Visible ball growing at barrel during charge
         private bool chargePaused = false; // True when energy is depleted (ball stops growing)
@@ -797,6 +798,11 @@ namespace BeneathTheFloor.Tools
         }
 
         /// <summary>
+        /// Check if charge has reached the maximum time (9 seconds).
+        /// </summary>
+        public bool IsChargeMaxed() => reloadTimer >= CHARGE_MAX_SECONDS;
+
+        /// <summary>
         /// Coroutine that spins the drill head while charging.
         /// </summary>
         private IEnumerator DrillPikeChargeCoroutine()
@@ -1322,10 +1328,15 @@ namespace BeneathTheFloor.Tools
 
             while (isReloading)
             {
-                // Only grow the charge when not paused (energy not depleted)
-                if (!chargePaused)
+                // Only grow the charge when not paused and under max time
+                if (!chargePaused && reloadTimer < CHARGE_MAX_SECONDS)
                 {
                     reloadTimer += Time.deltaTime;
+                    if (reloadTimer >= CHARGE_MAX_SECONDS)
+                    {
+                        reloadTimer = CHARGE_MAX_SECONDS;
+                        chargePaused = true; // Stop growing permanently
+                    }
                 }
 
                 float progress = reloadTimer / CHARGE_RATE; // Uncapped
