@@ -31,7 +31,7 @@ namespace BeneathTheFloor.Machines
         public static int JetpackEfficiencyLevel { get; private set; } = 0;
         public const int JETPACK_EFFICIENCY_MAX_LEVEL = 3;
         private static readonly float[] jetpackDrainPerLevel = { 15f, 12f, 9f, 5f };
-        private static readonly int[] jetpackEfficiencyCosts = { 500, 900, 1500 };
+        private static readonly int[] jetpackEfficiencyCosts = { 625, 1125, 1875 };
 
         // Power multiplier values per level
         private static readonly float[] toolPowerMultipliers = { 1.0f, 1.5f, 2.0f };
@@ -57,9 +57,9 @@ namespace BeneathTheFloor.Machines
         public const int TOTAL_MAX_LEVEL = 7;     // FirstRoom adds L6, L7
 
         // Costs for ALL energy upgrades (L0→L1 through L6→L7)
-        // Basement costs (L0-L5): 15, 150, 280, 450, 700
-        // FirstRoom exclusive (L6-L7): 1000, 1500
-        private static readonly int[] energyUpgradeCosts = { 15, 150, 280, 450, 700, 1000, 1500 };
+        // Basement costs (L0-L5): 15, 188, 350, 563, 875
+        // FirstRoom exclusive (L6-L7): 1250, 1875
+        private static readonly int[] energyUpgradeCosts = { 15, 188, 350, 563, 875, 1250, 1875 };
 
         // Tab system
         private enum UpgradeTab { Tools, Energy, Jetpack, Robots, Systems }
@@ -743,7 +743,7 @@ namespace BeneathTheFloor.Machines
             else
             {
                 // BUY button with cost
-                int cost = 10000;
+                int cost = 12500;
 
                 GameObject btn = new GameObject("BuyButton");
                 btn.transform.SetParent(section.transform, false);

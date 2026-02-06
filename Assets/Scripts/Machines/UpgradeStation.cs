@@ -171,7 +171,7 @@ namespace BeneathTheFloor.Machines
             // L0: 5 slots, stack size 1 (base)
             // L1: 10 slots, stack size 1 (first upgrade expands slots)
             // L2-L6: 10 slots, stack size 2-6 (subsequent upgrades increase stack size)
-            // Costs: L0->L1=100, L1->L2=150, L2->L3=200, L3->L4=300, L4->L5=450, L5->L6=650
+            // Costs: L0->L1=125, L1->L2=188, L2->L3=250, L3->L4=375, L4->L5=563, L5->L6=813
             runtimeUpgrades.Add(new RuntimeUpgrade
             {
                 upgradeId = "inventory_size",
@@ -183,19 +183,19 @@ namespace BeneathTheFloor.Machines
                 currentLevel = 0,
                 // Values represent upgrade level (InventorySystem handles the logic)
                 valuesPerLevel = new float[] { 0f, 1f, 2f, 3f, 4f, 5f, 6f },
-                creditCostsPerLevel = new int[] { 100, 150, 200, 300, 450, 650 },
+                creditCostsPerLevel = new int[] { 125, 188, 250, 375, 563, 813 },
                 // Legacy fallback
                 baseValue = 0f,
                 valuePerLevel = 1f,
-                baseCreditCost = 100,
+                baseCreditCost = 125,
                 creditCostMultiplier = 1.5f,
                 baseCosts = new List<ResourceRequirement>()
             });
 
             // ==================== HEADLAMP (Range + Intensity) ====================
-            // Range: L0=8m, L1=12m, L2=16m (visibly noticeable increases)
-            // Intensity: L0=2.5, L1=3.5, L2=4.5 (brighter at each level)
-            // Costs: L0->L1=80, L1->L2=200
+            // Range: L0=8m, L1=12m, L2=16m, L3=20m (visibly noticeable increases)
+            // Intensity: L0=2.5, L1=3.5, L2=4.5, L3=5.5 (brighter at each level)
+            // Costs: L0->L1=100, L1->L2=250, L2->L3=500
             runtimeUpgrades.Add(new RuntimeUpgrade
             {
                 upgradeId = "headlamp",
@@ -203,24 +203,24 @@ namespace BeneathTheFloor.Machines
                 description = "Upgrades your headlamp for brighter light and longer range underground.",
                 category = UpgradeCategory.Player,
                 upgradeType = UpgradeType.LightRadius, // Still uses LightRadius type for apply logic
-                maxLevel = 2,
+                maxLevel = 3,
                 currentLevel = 0,
                 // Balance V1: Explicit per-level arrays (range)
-                valuesPerLevel = new float[] { 8f, 12f, 16f },
+                valuesPerLevel = new float[] { 8f, 12f, 16f, 20f },
                 // Secondary values: intensity (2.5 base, +1.0 per level for noticeable difference)
-                secondaryValuesPerLevel = new float[] { 2.5f, 3.5f, 4.5f },
-                creditCostsPerLevel = new int[] { 80, 200 },
+                secondaryValuesPerLevel = new float[] { 2.5f, 3.5f, 4.5f, 5.5f },
+                creditCostsPerLevel = new int[] { 100, 250, 500 },
                 // Legacy fallback
                 baseValue = 8f,
                 valuePerLevel = 4f,
-                baseCreditCost = 80,
+                baseCreditCost = 100,
                 creditCostMultiplier = 2.5f,
                 baseCosts = new List<ResourceRequirement>()
             });
 
             // ==================== MOVE SPEED ====================
             // Speed: L0=5, L1=6, L2=7
-            // Costs: L0->L1=150, L1->L2=400
+            // Costs: L0->L1=188, L1->L2=500
             runtimeUpgrades.Add(new RuntimeUpgrade
             {
                 upgradeId = "move_speed",
@@ -232,18 +232,18 @@ namespace BeneathTheFloor.Machines
                 currentLevel = 0,
                 // Balance V1: Explicit per-level arrays
                 valuesPerLevel = new float[] { 5f, 6f, 7f },
-                creditCostsPerLevel = new int[] { 150, 400 },
+                creditCostsPerLevel = new int[] { 188, 500 },
                 // Legacy fallback
                 baseValue = 5f,
                 valuePerLevel = 1f,
-                baseCreditCost = 150,
+                baseCreditCost = 188,
                 creditCostMultiplier = 2.5f,
                 baseCosts = new List<ResourceRequirement>()
             });
 
             // ==================== ENERGY CAPACITY ====================
             // Capacity: L0=100, L1=125, L2=150, L3=200, L4=275, L5=375
-            // Costs: L0->L1=15, L1->L2=150, L2->L3=280, L3->L4=450, L4->L5=700
+            // Costs: L0->L1=15, L1->L2=188, L2->L3=350, L3->L4=563, L4->L5=875
             runtimeUpgrades.Add(new RuntimeUpgrade
             {
                 upgradeId = "energy_capacity",
@@ -254,7 +254,7 @@ namespace BeneathTheFloor.Machines
                 maxLevel = 5,
                 currentLevel = 0,
                 valuesPerLevel = new float[] { 100f, 125f, 150f, 200f, 275f, 375f },
-                creditCostsPerLevel = new int[] { 15, 150, 280, 450, 700 },
+                creditCostsPerLevel = new int[] { 15, 188, 350, 563, 875 },
                 baseValue = 100f,
                 valuePerLevel = 55f,
                 baseCreditCost = 15,
@@ -266,9 +266,9 @@ namespace BeneathTheFloor.Machines
             // Combined upgrade: affects both dig power AND radius
             // Multipliers: L0=1.0x, L1=1.05x, L2=1.10x, L3=1.15x
             // Per-tier costs (hardcoded in GetNextLevelCreditCost):
-            // Tool 1: L0->L1=15, L1->L2=100, L2->L3=220
-            // Tool 2: L0->L1=80, L1->L2=180, L2->L3=300
-            // Tool 3: L0->L1=150, L1->L2=350, L2->L3=800
+            // Tool 1: L0->L1=19, L1->L2=125, L2->L3=275
+            // Tool 2: L0->L1=100, L1->L2=225, L2->L3=375
+            // Tool 3: L0->L1=188, L1->L2=438, L2->L3=1000
             runtimeUpgrades.Add(new RuntimeUpgrade
             {
                 upgradeId = "tool_power",
@@ -279,10 +279,10 @@ namespace BeneathTheFloor.Machines
                 maxLevel = 3,
                 currentLevel = 0,
                 valuesPerLevel = new float[] { 1.0f, 1.05f, 1.10f, 1.15f },
-                creditCostsPerLevel = new int[] { 15, 100, 220 }, // Tool 1 costs (fallback)
+                creditCostsPerLevel = new int[] { 19, 125, 275 }, // Tool 1 costs (fallback)
                 baseValue = 1.0f,
                 valuePerLevel = 0.05f,
-                baseCreditCost = 15,
+                baseCreditCost = 19,
                 creditCostMultiplier = 2.0f,
                 baseCosts = new List<ResourceRequirement>()
             });
@@ -291,7 +291,7 @@ namespace BeneathTheFloor.Machines
             // Upgrade to next tool tier (requires all 4 tool upgrades maxed)
             // Tier bonus: 1.12x global multiplier to power and radius (nerfed from 1.2x)
             // Upgrades are NOT reset - costs scale with tier instead
-            // Costs: T1->T2=450, T2->T3=800
+            // Costs: T1->T2=563, T2->T3=1000
             runtimeUpgrades.Add(new RuntimeUpgrade
             {
                 upgradeId = "tool_tier",
@@ -302,10 +302,10 @@ namespace BeneathTheFloor.Machines
                 maxLevel = 2, // T1->T2, T2->T3
                 currentLevel = 0,
                 valuesPerLevel = new float[] { 1.0f, 1.12f, 1.25f }, // Cumulative: 1.0, 1.12, 1.12*1.12≈1.25 (nerfed from 1.44)
-                creditCostsPerLevel = new int[] { 450, 800 },
+                creditCostsPerLevel = new int[] { 563, 1000 },
                 baseValue = 1.0f,
                 valuePerLevel = 0.12f,
-                baseCreditCost = 800,
+                baseCreditCost = 1000,
                 creditCostMultiplier = 2.0f,
                 baseCosts = new List<ResourceRequirement>()
             });
@@ -322,13 +322,13 @@ namespace BeneathTheFloor.Machines
                 upgradeType = UpgradeType.LampPurchase,
                 maxLevel = 99, // Essentially unlimited - can buy many lamps
                 currentLevel = 0, // Tracks total lamps purchased (but inventory is separate)
-                // Each lamp costs 50 credits (flat cost, no scaling)
+                // Each lamp costs 63 credits (flat cost, no scaling)
                 valuesPerLevel = new float[] { 1f }, // Value = 1 lamp per purchase
-                creditCostsPerLevel = new int[] { 50 }, // Always costs 50
+                creditCostsPerLevel = new int[] { 63 }, // Always costs 63
                 // Legacy fallback
                 baseValue = 1f,
                 valuePerLevel = 0f,
-                baseCreditCost = 50,
+                baseCreditCost = 63,
                 creditCostMultiplier = 1.0f, // No scaling - always same cost
                 baseCosts = new List<ResourceRequirement>()
             });
@@ -337,7 +337,7 @@ namespace BeneathTheFloor.Machines
             // Upgrade the winch cable to descend deeper
             // Tiers: 0=Frayed Rope (10m), 1=Hemp (15m), 2=Steel (20m), 3=Reinforced (25m),
             //        4=Master (30m), 5=Deep Reach (40m), 6=Abyss (50m)
-            // Costs: 50, 150, 300, 500, 800, 1200
+            // Costs: 94, 250, 500, 813, 1188, 1750
             runtimeUpgrades.Add(new RuntimeUpgrade
             {
                 upgradeId = "winch_cable",
@@ -356,11 +356,11 @@ namespace BeneathTheFloor.Machines
                 // Tier 5: 40m, 2.3x speed, 85% power
                 // Tier 6: 50m, 2.5x speed, 95% power
                 valuesPerLevel = new float[] { 10f, 15f, 20f, 25f, 30f, 40f, 50f },
-                creditCostsPerLevel = new int[] { 75, 200, 400, 650, 950, 1400 },
+                creditCostsPerLevel = new int[] { 94, 250, 500, 813, 1188, 1750 },
                 // Legacy fallback
                 baseValue = 10f,
                 valuePerLevel = 5f,
-                baseCreditCost = 75,
+                baseCreditCost = 94,
                 creditCostMultiplier = 2.0f,
                 baseCosts = new List<ResourceRequirement>()
             });
@@ -381,10 +381,10 @@ namespace BeneathTheFloor.Machines
                 maxLevel = 1,
                 currentLevel = 0,
                 valuesPerLevel = new float[] { 0f, 1f },
-                creditCostsPerLevel = new int[] { 10000 },
+                creditCostsPerLevel = new int[] { 12500 },
                 baseValue = 0f,
                 valuePerLevel = 1f,
-                baseCreditCost = 10000,
+                baseCreditCost = 12500,
                 creditCostMultiplier = 1.0f,
                 baseCosts = new List<ResourceRequirement>()
             });
@@ -2650,9 +2650,9 @@ namespace BeneathTheFloor.Machines
             {
                 int currentTier = UpgradeStation.GetCurrentToolTierIndex();
                 // Per-tier cost arrays: [L0->L1, L1->L2, L2->L3]
-                int[] tier1Costs = new int[] { 15, 100, 220 };   // Tool 1
-                int[] tier2Costs = new int[] { 80, 180, 300 };   // Tool 2
-                int[] tier3Costs = new int[] { 150, 350, 800 };  // Tool 3
+                int[] tier1Costs = new int[] { 19, 125, 275 };   // Tool 1
+                int[] tier2Costs = new int[] { 100, 225, 375 };  // Tool 2
+                int[] tier3Costs = new int[] { 188, 438, 1000 }; // Tool 3
 
                 int[] costsToUse = currentTier switch
                 {
