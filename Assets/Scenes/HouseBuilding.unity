@@ -64638,7 +64638,7 @@ MonoBehaviour:
   deepFogColor: {r: 0.05, g: 0.03, b: 0.02, a: 1}
   baseFogDensity: 0.01
   maxFogDensity: 0.08
-  lampPrefab: {fileID: 0}
+  lampPrefab: {fileID: 1000010000000000, guid: d10e50c0ee057de4ebc8e5a98bd8cf01, type: 3}
   maxPlaceableLamps: 20
   lampSupportCheckBuffer: 1
   showDebugInfo: 0
@@ -75659,11 +75659,13 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 0
   surfaceOffset: 0.15
-  lampPreviewPrefab: {fileID: 0}
-  validPlacementMaterial: {fileID: 0}
-  invalidPlacementMaterial: {fileID: 0}
-  validColor: {r: 0, g: 1, b: 0, a: 0.5}
-  invalidColor: {r: 1, g: 0, b: 0, a: 0.5}
+  lampPreviewPrefab: {fileID: 1000010000000000, guid: d10e50c0ee057de4ebc8e5a98bd8cf01, type: 3}
+  hologramColor: {r: 0.3, g: 0.7, b: 1, a: 0.35}
+  hologramEmissionIntensity: 1.5
+  flickerSpeed: 15
+  flickerAlphaMin: 0.05
+  flickerAlphaMax: 0.3
+  jitterAmount: 0.02
   lampsInInventory: 1
   lampCost: 50
 --- !u!114 &2132725342

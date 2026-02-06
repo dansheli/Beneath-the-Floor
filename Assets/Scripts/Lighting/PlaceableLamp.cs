@@ -40,12 +40,6 @@ namespace BeneathTheFloor.Lighting
         // Runtime
         private Light lampLight;
         private float baseIntensity;
-        private MeshRenderer lampVisual;
-        #pragma warning disable CS0414 // Reserved for highlight system
-        private bool isHighlighted = false;
-        #pragma warning restore CS0414
-        private Material originalMaterial;
-        private Color originalEmissionColor;
 
         // Support detection
         private bool _isFalling = false;
@@ -129,16 +123,12 @@ namespace BeneathTheFloor.Lighting
             lampLight.cullingMask = ~0; // All layers
 
             baseIntensity = intensity;
-
-            // Set default emission color (in case CreateDefaultVisual doesn't run)
-            originalEmissionColor = lampEmissionColor * 2f;
         }
 
         private void CreateDefaultVisual()
         {
             // Check if visual already exists
-            lampVisual = GetComponentInChildren<MeshRenderer>();
-            if (lampVisual != null) return;
+            if (GetComponentInChildren<MeshRenderer>() != null) return;
 
             // Create a simple lamp visual (sphere)
             var visualObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
@@ -160,19 +150,15 @@ namespace BeneathTheFloor.Lighting
                 sphereCollider.radius = lampScale * 0.6f;
             }
 
-            lampVisual = visualObj.GetComponent<MeshRenderer>();
+            var renderer = visualObj.GetComponent<MeshRenderer>();
 
-            // Create emissive material
+            // Create simple material
             var mat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
             if (mat != null)
             {
                 mat.SetColor("_BaseColor", lampEmissionColor);
-                mat.SetColor("_EmissionColor", lampEmissionColor * 2f);
-                mat.EnableKeyword("_EMISSION");
-                lampVisual.material = mat;
+                renderer.material = mat;
             }
-
-            originalEmissionColor = lampEmissionColor * 2f;
         }
 
         private void UpdateFlicker()
@@ -242,11 +228,26 @@ namespace BeneathTheFloor.Lighting
             );
             _rigidbody.AddForce(randomImpulse, ForceMode.Impulse);
 
-            // Ensure collider exists for physics
+            // Ensure collider exists for physics - compute from mesh bounds
             if (GetComponent<Collider>() == null)
             {
                 var sphereCol = gameObject.AddComponent<SphereCollider>();
-                sphereCol.radius = lampScale * 0.6f;
+                var renderers = GetComponentsInChildren<MeshRenderer>();
+                if (renderers.Length > 0)
+                {
+                    Bounds bounds = renderers[0].bounds;
+                    for (int i = 1; i < renderers.Length; i++)
+                    {
+                        if (renderers[i] != null)
+                            bounds.Encapsulate(renderers[i].bounds);
+                    }
+                    sphereCol.center = transform.InverseTransformPoint(bounds.center);
+                    sphereCol.radius = bounds.extents.magnitude / transform.lossyScale.x;
+                }
+                else
+                {
+                    sphereCol.radius = lampScale * 0.6f;
+                }
             }
         }
 
@@ -290,36 +291,12 @@ namespace BeneathTheFloor.Lighting
 
         public void OnHoverEnter()
         {
-            isHighlighted = true;
-
-            // Brighten the lamp visual to show it's selected
-            if (lampVisual != null && lampVisual.material != null)
-            {
-                lampVisual.material.SetColor("_EmissionColor", lampEmissionColor * 4f);
-            }
-
-            // Slightly increase light intensity
-            if (lampLight != null)
-            {
-                lampLight.intensity = baseIntensity * 1.3f;
-            }
+            // Interaction text is shown by IInteractable - no visual effect needed
         }
 
         public void OnHoverExit()
         {
-            isHighlighted = false;
-
-            // Restore original emission
-            if (lampVisual != null && lampVisual.material != null)
-            {
-                lampVisual.material.SetColor("_EmissionColor", originalEmissionColor);
-            }
-
-            // Restore original intensity
-            if (lampLight != null)
-            {
-                lampLight.intensity = baseIntensity;
-            }
+            // No visual effect to restore
         }
 
         #endregion

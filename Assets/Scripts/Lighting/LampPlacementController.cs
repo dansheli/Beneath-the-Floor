@@ -21,10 +21,14 @@ namespace BeneathTheFloor.Lighting
 
         [Header("Preview")]
         [SerializeField] private GameObject lampPreviewPrefab;
-        [SerializeField] private Material validPlacementMaterial;
-        [SerializeField] private Material invalidPlacementMaterial;
-        [SerializeField] private Color validColor = new Color(0f, 1f, 0f, 0.5f);
-        [SerializeField] private Color invalidColor = new Color(1f, 0f, 0f, 0.5f);
+
+        [Header("Hologram Settings")]
+        [SerializeField] private Color hologramColor = new Color(0.3f, 0.7f, 1.0f, 0.35f);
+        [SerializeField] private float hologramEmissionIntensity = 1.5f;
+        [SerializeField] private float flickerSpeed = 15f;
+        [SerializeField] private float flickerAlphaMin = 0.05f;
+        [SerializeField] private float flickerAlphaMax = 0.3f;
+        [SerializeField] private float jitterAmount = 0.02f;
 
         [Header("Inventory")]
         [SerializeField] private int lampsInInventory = 0; // Start with no lamps - must purchase from shop
@@ -39,6 +43,9 @@ namespace BeneathTheFloor.Lighting
         private Quaternion placementRotation;
         private Vector3 placementNormal; // Normal of the surface for support detection
         private float exitPlacementTime = -1f; // Track when we exited to prevent dig on same frame
+        private Material hologramMaterial;
+        private Vector3 previewBasePosition; // For jitter offset
+        private Vector3 previewOriginalScale; // Preserve prefab scale
 
         public static LampPlacementController Instance { get; private set; }
 
@@ -91,6 +98,11 @@ namespace BeneathTheFloor.Lighting
             }
 
             CleanupPreview();
+
+            if (hologramMaterial != null)
+            {
+                Destroy(hologramMaterial);
+            }
         }
 
         private void Update()
@@ -147,23 +159,21 @@ namespace BeneathTheFloor.Lighting
 
         private void CreatePreviewMaterials()
         {
-            if (validPlacementMaterial == null)
-            {
-                validPlacementMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit"));
-                validPlacementMaterial.SetColor("_BaseColor", validColor);
-                validPlacementMaterial.SetFloat("_Surface", 1); // Transparent
-                validPlacementMaterial.SetFloat("_Blend", 0); // Alpha
-                validPlacementMaterial.renderQueue = 3000;
-            }
+            hologramMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+            hologramMaterial.SetFloat("_Surface", 1); // Transparent
+            hologramMaterial.SetFloat("_Blend", 0); // Alpha
+            hologramMaterial.SetFloat("_AlphaClip", 0);
+            hologramMaterial.SetOverrideTag("RenderType", "Transparent");
+            hologramMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            hologramMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            hologramMaterial.SetInt("_ZWrite", 0);
+            hologramMaterial.renderQueue = 3000;
+            hologramMaterial.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            hologramMaterial.EnableKeyword("_EMISSION");
 
-            if (invalidPlacementMaterial == null)
-            {
-                invalidPlacementMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit"));
-                invalidPlacementMaterial.SetColor("_BaseColor", invalidColor);
-                invalidPlacementMaterial.SetFloat("_Surface", 1);
-                invalidPlacementMaterial.SetFloat("_Blend", 0);
-                invalidPlacementMaterial.renderQueue = 3000;
-            }
+            Color emissionColor = new Color(hologramColor.r, hologramColor.g, hologramColor.b) * hologramEmissionIntensity;
+            hologramMaterial.SetColor("_BaseColor", hologramColor);
+            hologramMaterial.SetColor("_EmissionColor", emissionColor);
         }
 
         private void EnterPlacementMode()
@@ -213,6 +223,14 @@ namespace BeneathTheFloor.Lighting
             {
                 lamp.enabled = false;
             }
+
+            // Disable all colliders so preview doesn't block raycasts
+            foreach (var col in currentPreview.GetComponentsInChildren<Collider>())
+            {
+                col.enabled = false;
+            }
+
+            previewOriginalScale = currentPreview.transform.localScale;
         }
 
         private void CleanupPreview()
@@ -228,11 +246,10 @@ namespace BeneathTheFloor.Lighting
         {
             if (currentPreview == null || playerCamera == null) return;
 
-            // Raycast from camera center
+            // Raycast from camera center - ignore triggers
             Ray ray = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
 
-            // Raycast against all layers to find any surface
-            if (Physics.Raycast(ray, out RaycastHit hit, placementDistance))
+            if (Physics.Raycast(ray, out RaycastHit hit, placementDistance, ~0, QueryTriggerInteraction.Ignore))
             {
                 // Check if the surface is within the excavation area
                 isValidPlacement = IsValidPlacementSurface(hit);
@@ -243,26 +260,13 @@ namespace BeneathTheFloor.Lighting
                 // Calculate position offset from surface
                 placementPosition = hit.point + hit.normal * surfaceOffset;
 
-                // Orient lamp to face outward from surface (lamp's forward = surface normal)
-                // This makes the lamp "stick out" from walls/floors properly
-                Vector3 surfaceNormal = hit.normal;
-                Vector3 upDirection = Vector3.up;
+                // Ground-only: lamp sits upright, facing player
+                Vector3 toPlayer = (playerCamera.transform.position - placementPosition).normalized;
+                toPlayer.y = 0;
+                if (toPlayer.sqrMagnitude < 0.01f) toPlayer = Vector3.forward;
+                placementRotation = Quaternion.LookRotation(toPlayer, Vector3.up);
 
-                // If surface is mostly horizontal (floor/ceiling), lamp faces player
-                if (Mathf.Abs(Vector3.Dot(surfaceNormal, Vector3.up)) > 0.7f)
-                {
-                    // Floor or ceiling - lamp faces toward player camera
-                    Vector3 toPlayer = (playerCamera.transform.position - placementPosition).normalized;
-                    toPlayer.y = 0; // Keep horizontal
-                    if (toPlayer.sqrMagnitude < 0.01f) toPlayer = Vector3.forward;
-                    placementRotation = Quaternion.LookRotation(toPlayer, surfaceNormal);
-                }
-                else
-                {
-                    // Wall - lamp faces outward from wall
-                    placementRotation = Quaternion.LookRotation(surfaceNormal, Vector3.up);
-                }
-
+                previewBasePosition = placementPosition;
                 currentPreview.transform.position = placementPosition;
                 currentPreview.transform.rotation = placementRotation;
             }
@@ -273,24 +277,61 @@ namespace BeneathTheFloor.Lighting
                 placementPosition = ray.origin + ray.direction * placementDistance;
                 placementRotation = Quaternion.identity;
 
+                previewBasePosition = placementPosition;
                 currentPreview.transform.position = placementPosition;
                 currentPreview.transform.rotation = placementRotation;
             }
 
-            // Update preview material color
+            // Update hologram material and effects
             UpdatePreviewMaterial();
+
+            // Apply glitch jitter when invalid
+            if (!isValidPlacement && currentPreview != null)
+            {
+                float jx = (Mathf.PerlinNoise(Time.time * 25f, 0f) - 0.5f) * 2f * jitterAmount;
+                float jy = (Mathf.PerlinNoise(0f, Time.time * 30f) - 0.5f) * 2f * jitterAmount;
+                float jz = (Mathf.PerlinNoise(Time.time * 20f, Time.time * 10f) - 0.5f) * 2f * jitterAmount;
+                currentPreview.transform.position = previewBasePosition + new Vector3(jx, jy, jz);
+
+                float scaleJitter = 1f + (Mathf.PerlinNoise(Time.time * 18f, 5f) - 0.5f) * 0.06f;
+                currentPreview.transform.localScale = previewOriginalScale * scaleJitter;
+            }
+            else if (currentPreview != null)
+            {
+                currentPreview.transform.localScale = previewOriginalScale;
+            }
         }
 
         private void UpdatePreviewMaterial()
         {
-            if (currentPreview == null) return;
+            if (currentPreview == null || hologramMaterial == null) return;
+
+            float alpha;
+            if (isValidPlacement)
+            {
+                // Stable blue hologram
+                alpha = hologramColor.a;
+            }
+            else
+            {
+                // Flickering broken hologram
+                float flicker = Mathf.Sin(Time.time * flickerSpeed) * 0.5f + 0.5f;
+                float noise = Mathf.PerlinNoise(Time.time * 8f, 3.7f);
+                float combined = flicker * 0.6f + noise * 0.4f;
+                alpha = Mathf.Lerp(flickerAlphaMin, flickerAlphaMax, combined);
+            }
+
+            Color baseColor = new Color(hologramColor.r, hologramColor.g, hologramColor.b, alpha);
+            hologramMaterial.SetColor("_BaseColor", baseColor);
 
             var renderers = currentPreview.GetComponentsInChildren<MeshRenderer>();
-            Material mat = isValidPlacement ? validPlacementMaterial : invalidPlacementMaterial;
-
             foreach (var renderer in renderers)
             {
-                renderer.material = mat;
+                // Apply hologram material to all submeshes
+                var mats = new Material[renderer.sharedMaterials.Length];
+                for (int i = 0; i < mats.Length; i++)
+                    mats[i] = hologramMaterial;
+                renderer.materials = mats;
             }
         }
 
