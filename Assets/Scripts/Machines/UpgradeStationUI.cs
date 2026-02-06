@@ -690,11 +690,8 @@ namespace BeneathTheFloor.Machines
         private void CreateToolUpgradesSection(Transform parent)
         {
             CreateSectionHeader(parent, "TOOL UPGRADES");
-
             CreateUpgradeRow(parent, "dig_power", "Dig Power",
                 "Break through terrain faster and dig wider holes");
-
-            // Tool Tier row removed - now automatically transitions when dig_power is maxed
         }
 
         private void CreatePlayerGearSection(Transform parent)

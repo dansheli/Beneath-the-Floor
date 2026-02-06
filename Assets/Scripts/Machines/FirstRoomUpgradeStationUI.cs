@@ -433,7 +433,7 @@ namespace BeneathTheFloor.Machines
 
         private void BuildToolsTab()
         {
-            // Simple layout - two sections stacked vertically, filling the space
+            // Simple layout - sections stacked vertically, filling the space
             GameObject container = new GameObject("ToolsContainer");
             container.transform.SetParent(contentArea.transform, false);
 
@@ -443,25 +443,394 @@ namespace BeneathTheFloor.Machines
             containerRect.offsetMin = new Vector2(30, 30);
             containerRect.offsetMax = new Vector2(-30, -30);
 
-            // Section 1: TOOL POWER & RADIUS (top half)
-            CreateSimpleUpgradeSection(container.transform,
-                "TOOL POWER & RADIUS",
-                "Increases dig power and digging area",
-                ToolPowerLevel,
-                TOOL_POWER_MAX_LEVEL,
-                new int[] { 500, 1000 },
-                "tool_power",
-                true); // isTopSection
+            // Check if Sonic Pulser is available or owned
+            bool bothMaxed = (ToolPowerLevel >= TOOL_POWER_MAX_LEVEL && SuperHitLevel >= SUPER_HIT_MAX_LEVEL);
+            bool hasSonicPulser = UpgradeStation.Instance != null && UpgradeStation.Instance.HasSonicPulser();
+            bool showSonicPulser = bothMaxed || hasSonicPulser;
 
-            // Section 2: SUPER HIT (bottom half)
-            CreateSimpleUpgradeSection(container.transform,
-                "SUPER HIT",
-                "More hits per charged attack (2 → 3 → 4)",
-                SuperHitLevel,
-                SUPER_HIT_MAX_LEVEL,
-                new int[] { 750, 1500 },
-                "super_hit",
-                false); // isBottomSection
+            if (showSonicPulser)
+            {
+                // 3-section layout: top 33%, middle 33%, bottom 33%
+                // Section 1: TOOL POWER & RADIUS (top third)
+                CreateTripleUpgradeSection(container.transform,
+                    "TOOL POWER & RADIUS",
+                    "Increases dig power and digging area",
+                    ToolPowerLevel,
+                    TOOL_POWER_MAX_LEVEL,
+                    new int[] { 500, 1000 },
+                    "tool_power",
+                    0); // section index 0 = top
+
+                // Section 2: SUPER HIT (middle third)
+                CreateTripleUpgradeSection(container.transform,
+                    "SUPER HIT",
+                    "More hits per charged attack (2 → 3 → 4)",
+                    SuperHitLevel,
+                    SUPER_HIT_MAX_LEVEL,
+                    new int[] { 750, 1500 },
+                    "super_hit",
+                    1); // section index 1 = middle
+
+                // Section 3: SONIC PULSER (bottom third)
+                CreateSonicPulserSection(container.transform, hasSonicPulser);
+            }
+            else
+            {
+                // Normal 2-section layout
+                // Section 1: TOOL POWER & RADIUS (top half)
+                CreateSimpleUpgradeSection(container.transform,
+                    "TOOL POWER & RADIUS",
+                    "Increases dig power and digging area",
+                    ToolPowerLevel,
+                    TOOL_POWER_MAX_LEVEL,
+                    new int[] { 500, 1000 },
+                    "tool_power",
+                    true); // isTopSection
+
+                // Section 2: SUPER HIT (bottom half)
+                CreateSimpleUpgradeSection(container.transform,
+                    "SUPER HIT",
+                    "More hits per charged attack (2 → 3 → 4)",
+                    SuperHitLevel,
+                    SUPER_HIT_MAX_LEVEL,
+                    new int[] { 750, 1500 },
+                    "super_hit",
+                    false); // isBottomSection
+            }
+        }
+
+        /// <summary>
+        /// Creates an upgrade section in a 3-section layout (each takes ~33% of height).
+        /// sectionIndex: 0 = top, 1 = middle, 2 = bottom
+        /// </summary>
+        private void CreateTripleUpgradeSection(Transform parent, string title, string desc, int currentLevel, int maxLevel, int[] costs, string upgradeId, int sectionIndex)
+        {
+            GameObject section = new GameObject($"Section_{upgradeId}");
+            section.transform.SetParent(parent, false);
+
+            RectTransform sectionRect = section.AddComponent<RectTransform>();
+            switch (sectionIndex)
+            {
+                case 0: // top third
+                    sectionRect.anchorMin = new Vector2(0, 0.68f);
+                    sectionRect.anchorMax = new Vector2(1, 1);
+                    break;
+                case 1: // middle third
+                    sectionRect.anchorMin = new Vector2(0, 0.35f);
+                    sectionRect.anchorMax = new Vector2(1, 0.66f);
+                    break;
+                default: // bottom third
+                    sectionRect.anchorMin = new Vector2(0, 0);
+                    sectionRect.anchorMax = new Vector2(1, 0.33f);
+                    break;
+            }
+            sectionRect.offsetMin = Vector2.zero;
+            sectionRect.offsetMax = Vector2.zero;
+
+            Image sectionBg = section.AddComponent<Image>();
+            sectionBg.color = sectionBgColor;
+
+            // === TITLE ===
+            GameObject titleObj = new GameObject("Title");
+            titleObj.transform.SetParent(section.transform, false);
+
+            RectTransform titleRect = titleObj.AddComponent<RectTransform>();
+            titleRect.anchorMin = new Vector2(0, 0.7f);
+            titleRect.anchorMax = new Vector2(1, 1);
+            titleRect.offsetMin = new Vector2(25, 0);
+            titleRect.offsetMax = new Vector2(-25, -10);
+
+            TextMeshProUGUI titleText = titleObj.AddComponent<TextMeshProUGUI>();
+            titleText.text = title;
+            titleText.fontSize = 20;
+            titleText.fontStyle = FontStyles.Bold;
+            titleText.color = textWhite;
+            titleText.alignment = TextAlignmentOptions.Left;
+
+            // === DESCRIPTION ===
+            GameObject descObj = new GameObject("Description");
+            descObj.transform.SetParent(section.transform, false);
+
+            RectTransform descRect = descObj.AddComponent<RectTransform>();
+            descRect.anchorMin = new Vector2(0, 0.45f);
+            descRect.anchorMax = new Vector2(1, 0.7f);
+            descRect.offsetMin = new Vector2(25, 0);
+            descRect.offsetMax = new Vector2(-25, 0);
+
+            TextMeshProUGUI descText = descObj.AddComponent<TextMeshProUGUI>();
+            descText.text = desc;
+            descText.fontSize = 13;
+            descText.color = textCyan;
+            descText.alignment = TextAlignmentOptions.Left;
+
+            // === LEVEL BOXES ROW ===
+            GameObject levelRow = new GameObject("LevelRow");
+            levelRow.transform.SetParent(section.transform, false);
+
+            RectTransform levelRowRect = levelRow.AddComponent<RectTransform>();
+            levelRowRect.anchorMin = new Vector2(0, 0);
+            levelRowRect.anchorMax = new Vector2(1, 0.40f);
+            levelRowRect.offsetMin = new Vector2(25, 10);
+            levelRowRect.offsetMax = new Vector2(-25, 0);
+
+            HorizontalLayoutGroup hlg = levelRow.AddComponent<HorizontalLayoutGroup>();
+            hlg.spacing = 10;
+            hlg.childControlWidth = false;
+            hlg.childControlHeight = true;
+            hlg.childForceExpandWidth = false;
+            hlg.childForceExpandHeight = true;
+            hlg.childAlignment = TextAnchor.MiddleLeft;
+
+            for (int i = 0; i <= maxLevel; i++)
+            {
+                bool isCompleted = (i == 0) || (i <= currentLevel);
+                bool isNext = (i == currentLevel + 1);
+
+                GameObject box = new GameObject($"Level_{i}");
+                box.transform.SetParent(levelRow.transform, false);
+
+                LayoutElement boxLe = box.AddComponent<LayoutElement>();
+                boxLe.minWidth = 65;
+                boxLe.preferredWidth = 65;
+
+                Image boxBg = box.AddComponent<Image>();
+                if (isCompleted)
+                    boxBg.color = buttonGreen;
+                else if (isNext)
+                    boxBg.color = new Color(0.15f, 0.25f, 0.30f);
+                else
+                    boxBg.color = rowBgDark;
+
+                if (isNext)
+                {
+                    Outline outline = box.AddComponent<Outline>();
+                    outline.effectColor = textCyan;
+                    outline.effectDistance = new Vector2(2, 2);
+                }
+
+                GameObject boxText = new GameObject("Text");
+                boxText.transform.SetParent(box.transform, false);
+
+                RectTransform boxTextRect = boxText.AddComponent<RectTransform>();
+                boxTextRect.anchorMin = Vector2.zero;
+                boxTextRect.anchorMax = Vector2.one;
+                boxTextRect.offsetMin = Vector2.zero;
+                boxTextRect.offsetMax = Vector2.zero;
+
+                TextMeshProUGUI tmp = boxText.AddComponent<TextMeshProUGUI>();
+                tmp.text = (i == 0) ? "BASE" : $"LVL {i}";
+                tmp.fontSize = 14;
+                tmp.fontStyle = FontStyles.Bold;
+                tmp.color = isCompleted ? textWhite : (isNext ? textCyan : textGray);
+                tmp.alignment = TextAlignmentOptions.Center;
+            }
+
+            // Spacer
+            GameObject spacer = new GameObject("Spacer");
+            spacer.transform.SetParent(levelRow.transform, false);
+            LayoutElement spacerLe = spacer.AddComponent<LayoutElement>();
+            spacerLe.flexibleWidth = 1;
+
+            // MAXED box (always maxed since we only show triple layout when both are maxed)
+            GameObject maxBox = new GameObject("Maxed");
+            maxBox.transform.SetParent(levelRow.transform, false);
+
+            LayoutElement maxLe = maxBox.AddComponent<LayoutElement>();
+            maxLe.minWidth = 100;
+            maxLe.preferredWidth = 100;
+
+            Image maxBg = maxBox.AddComponent<Image>();
+            maxBg.color = new Color(0.2f, 0.4f, 0.25f);
+
+            GameObject maxText = new GameObject("Text");
+            maxText.transform.SetParent(maxBox.transform, false);
+
+            RectTransform maxTextRect = maxText.AddComponent<RectTransform>();
+            maxTextRect.anchorMin = Vector2.zero;
+            maxTextRect.anchorMax = Vector2.one;
+            maxTextRect.offsetMin = Vector2.zero;
+            maxTextRect.offsetMax = Vector2.zero;
+
+            TextMeshProUGUI maxTmp = maxText.AddComponent<TextMeshProUGUI>();
+            maxTmp.text = "MAXED";
+            maxTmp.fontSize = 15;
+            maxTmp.fontStyle = FontStyles.Bold;
+            maxTmp.color = textWhite;
+            maxTmp.alignment = TextAlignmentOptions.Center;
+        }
+
+        /// <summary>
+        /// Creates the Sonic Pulser purchase/owned section in the bottom third.
+        /// </summary>
+        private void CreateSonicPulserSection(Transform parent, bool isOwned)
+        {
+            GameObject section = new GameObject("Section_sonic_pulser");
+            section.transform.SetParent(parent, false);
+
+            RectTransform sectionRect = section.AddComponent<RectTransform>();
+            sectionRect.anchorMin = new Vector2(0, 0);
+            sectionRect.anchorMax = new Vector2(1, 0.33f);
+            sectionRect.offsetMin = Vector2.zero;
+            sectionRect.offsetMax = Vector2.zero;
+
+            Image sectionBg = section.AddComponent<Image>();
+            sectionBg.color = new Color(0.07f, 0.09f, 0.11f, 1f); // Slightly different for emphasis
+
+            // === TITLE ===
+            GameObject titleObj = new GameObject("Title");
+            titleObj.transform.SetParent(section.transform, false);
+
+            RectTransform titleRect = titleObj.AddComponent<RectTransform>();
+            titleRect.anchorMin = new Vector2(0, 0.65f);
+            titleRect.anchorMax = new Vector2(0.55f, 1);
+            titleRect.offsetMin = new Vector2(25, 0);
+            titleRect.offsetMax = new Vector2(0, -10);
+
+            TextMeshProUGUI titleText = titleObj.AddComponent<TextMeshProUGUI>();
+            titleText.text = "SONIC PULSER";
+            titleText.fontSize = 22;
+            titleText.fontStyle = FontStyles.Bold;
+            titleText.color = new Color(1.0f, 0.8f, 0.2f); // Bright gold/yellow
+            titleText.alignment = TextAlignmentOptions.Left;
+
+            // === DESCRIPTION ===
+            GameObject descObj = new GameObject("Description");
+            descObj.transform.SetParent(section.transform, false);
+
+            RectTransform descRect = descObj.AddComponent<RectTransform>();
+            descRect.anchorMin = new Vector2(0, 0.35f);
+            descRect.anchorMax = new Vector2(0.55f, 0.65f);
+            descRect.offsetMin = new Vector2(25, 0);
+            descRect.offsetMax = new Vector2(0, 0);
+
+            TextMeshProUGUI descText = descObj.AddComponent<TextMeshProUGUI>();
+            descText.text = "An advanced sonic-powered digging tool";
+            descText.fontSize = 13;
+            descText.color = textCyan;
+            descText.alignment = TextAlignmentOptions.Left;
+
+            if (isOwned)
+            {
+                // OWNED badge
+                GameObject ownedBox = new GameObject("OwnedBadge");
+                ownedBox.transform.SetParent(section.transform, false);
+
+                RectTransform ownedRect = ownedBox.AddComponent<RectTransform>();
+                ownedRect.anchorMin = new Vector2(0.60f, 0.25f);
+                ownedRect.anchorMax = new Vector2(0.90f, 0.75f);
+                ownedRect.offsetMin = Vector2.zero;
+                ownedRect.offsetMax = Vector2.zero;
+
+                Image ownedBg = ownedBox.AddComponent<Image>();
+                ownedBg.color = new Color(0.2f, 0.5f, 0.25f);
+
+                GameObject ownedText = new GameObject("Text");
+                ownedText.transform.SetParent(ownedBox.transform, false);
+
+                RectTransform ownedTextRect = ownedText.AddComponent<RectTransform>();
+                ownedTextRect.anchorMin = Vector2.zero;
+                ownedTextRect.anchorMax = Vector2.one;
+                ownedTextRect.offsetMin = Vector2.zero;
+                ownedTextRect.offsetMax = Vector2.zero;
+
+                TextMeshProUGUI ownedTmp = ownedText.AddComponent<TextMeshProUGUI>();
+                ownedTmp.text = "OWNED";
+                ownedTmp.fontSize = 20;
+                ownedTmp.fontStyle = FontStyles.Bold;
+                ownedTmp.color = textWhite;
+                ownedTmp.alignment = TextAlignmentOptions.Center;
+            }
+            else
+            {
+                // BUY button with cost
+                int cost = 10000;
+
+                GameObject btn = new GameObject("BuyButton");
+                btn.transform.SetParent(section.transform, false);
+
+                RectTransform btnRect = btn.AddComponent<RectTransform>();
+                btnRect.anchorMin = new Vector2(0.60f, 0.20f);
+                btnRect.anchorMax = new Vector2(0.95f, 0.80f);
+                btnRect.offsetMin = Vector2.zero;
+                btnRect.offsetMax = Vector2.zero;
+
+                Image btnBg = btn.AddComponent<Image>();
+                bool canAfford = CurrencyManager.Instance != null && CurrencyManager.Instance.CanAfford(cost);
+                btnBg.color = canAfford ? buttonCyan : lockedColor;
+
+                Button button = btn.AddComponent<Button>();
+                button.targetGraphic = btnBg;
+                button.interactable = canAfford;
+
+                int capturedCost = cost;
+                button.onClick.AddListener(() => TryPurchaseSonicPulser(capturedCost));
+
+                GameObject btnText = new GameObject("Text");
+                btnText.transform.SetParent(btn.transform, false);
+
+                RectTransform btnTextRect = btnText.AddComponent<RectTransform>();
+                btnTextRect.anchorMin = Vector2.zero;
+                btnTextRect.anchorMax = Vector2.one;
+                btnTextRect.offsetMin = Vector2.zero;
+                btnTextRect.offsetMax = Vector2.zero;
+
+                TextMeshProUGUI btnTmp = btnText.AddComponent<TextMeshProUGUI>();
+                btnTmp.text = $"BUY  ${cost:N0}";
+                btnTmp.fontSize = 18;
+                btnTmp.fontStyle = FontStyles.Bold;
+                btnTmp.color = canAfford ? new Color(1f, 0.9f, 0.3f) : textGray;
+                btnTmp.alignment = TextAlignmentOptions.Center;
+                btnTmp.raycastTarget = false;
+            }
+        }
+
+        private void TryPurchaseSonicPulser(int cost)
+        {
+            if (CurrencyManager.Instance == null) return;
+
+            if (!CurrencyManager.Instance.Spend(cost))
+            {
+                Debug.Log("[FirstRoomUpgradeStationUI] Not enough credits for Sonic Pulser");
+                return;
+            }
+
+            Debug.Log($"[FirstRoomUpgradeStationUI] Purchased Sonic Pulser for ${cost}!");
+            currentStation?.PlayUpgradeSound();
+
+            // Set sonic_pulser upgrade in the main UpgradeStation system
+            if (UpgradeStation.Instance != null)
+            {
+                var sonicUpgrade = UpgradeStation.Instance.GetRuntimeUpgradeById("sonic_pulser");
+                if (sonicUpgrade != null)
+                {
+                    sonicUpgrade.currentLevel = 1;
+                    PlayerPrefs.SetInt("RuntimeUpgrade_sonic_pulser", 1);
+                }
+            }
+            else
+            {
+                // Fallback: save directly to PlayerPrefs
+                PlayerPrefs.SetInt("RuntimeUpgrade_sonic_pulser", 1);
+            }
+
+            // Switch to Tool 5 in HeldToolController
+            if (Tools.HeldToolController.Instance != null)
+            {
+                Tools.HeldToolController.Instance.SetActiveTool(4);
+            }
+
+            // Save tool index
+            PlayerPrefs.SetInt("PlayerToolIndex", 4);
+            PlayerPrefs.Save();
+
+            // Show toast
+            if (UI.PickupNotificationSystem.Instance != null)
+            {
+                UI.PickupNotificationSystem.Instance.ShowNotification("Sonic Pulser acquired!");
+            }
+
+            // Refresh tab to show OWNED state
+            SelectTab(currentTab);
         }
 
         private void CreateSimpleUpgradeSection(Transform parent, string title, string desc, int currentLevel, int maxLevel, int[] costs, string upgradeId, bool isTop)

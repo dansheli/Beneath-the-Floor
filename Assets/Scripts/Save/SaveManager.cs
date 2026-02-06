@@ -1251,8 +1251,11 @@ namespace BeneathTheFloor.Save
                 {
                     int tierLevel = UpgradeStation.Instance.GetRuntimeUpgradeLevel("tool_tier");
                     if (tierLevel > 0)
-                        toolIndex = Mathf.Clamp(tierLevel, 0, 3);
+                        toolIndex = Mathf.Clamp(tierLevel, 0, 4);
                 }
+                // Check if Sonic Pulser was purchased
+                if (UpgradeStation.Instance != null && UpgradeStation.Instance.HasSonicPulser())
+                    toolIndex = 4;
                 HeldToolController.Instance.SetActiveToolAndTier(toolIndex, currentSave.currentToolTier);
                 if (currentSave.hasToolEquipped)
                 {
@@ -1389,8 +1392,11 @@ namespace BeneathTheFloor.Save
                 {
                     int tierLevel = UpgradeStation.Instance.GetRuntimeUpgradeLevel("tool_tier");
                     if (tierLevel > 0)
-                        toolIndex = Mathf.Clamp(tierLevel, 0, 3);
+                        toolIndex = Mathf.Clamp(tierLevel, 0, 4);
                 }
+                // Check if Sonic Pulser was purchased
+                if (UpgradeStation.Instance != null && UpgradeStation.Instance.HasSonicPulser())
+                    toolIndex = 4;
 
                 if (debugLogs)
                     Debug.Log($"[SaveManager] Setting HeldToolController tool={toolIndex}, tier={currentSave.currentToolTier}, equipped={currentSave.hasToolEquipped}");

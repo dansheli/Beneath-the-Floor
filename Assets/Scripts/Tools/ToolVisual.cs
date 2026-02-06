@@ -9,7 +9,8 @@ namespace BeneathTheFloor.Tools
         Shovel,    // Tier 1 - Heavy digging, scooping motion
         Hoe,       // Tier 2 - Horizontal chopping sweep
         Pickaxe,   // Tier 3 - Overhead mining strike
-        DrillPike  // Tier 4 - Normal hit + charged spinning super hit
+        DrillPike,     // Tier 4 - Normal hit + charged spinning super hit
+        SonicPulser    // Tier 5 - Gun-style pulse weapon with charge mechanic
     }
 
     /// <summary>
@@ -40,6 +41,13 @@ namespace BeneathTheFloor.Tools
         [SerializeField] private AudioClip chargeSpinSound;
         [SerializeField] private AudioClip chargeReleaseSound;
 
+        [Header("Sonic Pulser Settings")]
+        [SerializeField] private float sonicIdleVibrationIntensity = 0.001f;
+        [SerializeField] private float sonicIdleVibrationSpeed = 30f;
+        [SerializeField] private float sonicRecoilDistance = 0.06f;
+        [SerializeField] private Color sonicPulseColor = new Color(0.3f, 0.7f, 1f, 1f);
+        [SerializeField] private Color sonicChargedPulseColor = new Color(0.6f, 0.4f, 1f, 1f);
+
         // Initial transforms for child parts
         private Vector3 headInitialLocalPos;
         private Quaternion headInitialLocalRot;
@@ -66,6 +74,19 @@ namespace BeneathTheFloor.Tools
         private float chargeTime = 0f;
         private Coroutine chargeCoroutine;
         private float currentSpinAngle = 0f;
+
+        // Sonic Pulser state
+        private Light sonicTipGlow;
+        private Transform sonicTipPoint;
+        private ProjectileExitGizmo projectileExitGizmo;
+
+        // Sonic Pulser charge state
+        private bool isReloading = false;
+        private float reloadTimer = 0f;
+        private const float CHARGE_RATE = 2f; // Seconds per unit of charge (no cap)
+        private Coroutine reloadCoroutine;
+        private GameObject chargeBallObj; // Visible ball growing at barrel during charge
+        private bool chargePaused = false; // True when energy is depleted (ball stops growing)
 
         private void Awake()
         {
@@ -177,12 +198,34 @@ namespace BeneathTheFloor.Tools
             float swayZ = Mathf.Sin(idleTimer * swaySpeed) * swayAmount;
             float swayX = Mathf.Sin(idleTimer * swaySpeed * 0.7f) * swayAmount * 0.3f;
 
+            // Sonic Pulser: add constant high-frequency vibration (the tool hums with energy)
+            if (animationType == ToolAnimationType.SonicPulser)
+            {
+                float vibX = Mathf.PerlinNoise(idleTimer * sonicIdleVibrationSpeed, 0f) - 0.5f;
+                float vibY = Mathf.PerlinNoise(0f, idleTimer * sonicIdleVibrationSpeed) - 0.5f;
+                bobX += vibX * sonicIdleVibrationIntensity * 2f;
+                bobY += vibY * sonicIdleVibrationIntensity * 2f;
+            }
+
             transform.localPosition = initialLocalPosition + new Vector3(bobX, bobY, 0);
             transform.localRotation = initialLocalRotation * Quaternion.Euler(swayX, 0, swayZ);
         }
 
         public void PlayDigAnimation()
         {
+            // Sonic Pulser: allow rapid fire by cancelling previous recoil animation
+            if (animationType == ToolAnimationType.SonicPulser && isAnimating)
+            {
+                if (animationCoroutine != null)
+                {
+                    StopCoroutine(animationCoroutine);
+                    animationCoroutine = null;
+                }
+                transform.localPosition = initialLocalPosition;
+                transform.localRotation = initialLocalRotation;
+                isAnimating = false;
+            }
+
             // Prevent double-triggering if already animating
             if (isAnimating) return;
 
@@ -211,6 +254,9 @@ namespace BeneathTheFloor.Tools
                     break;
                 case ToolAnimationType.DrillPike:
                     animationCoroutine = StartCoroutine(DrillPikeDigAnimation());
+                    break;
+                case ToolAnimationType.SonicPulser:
+                    animationCoroutine = StartCoroutine(SonicPulserShotAnimation());
                     break;
             }
         }
@@ -553,38 +599,102 @@ namespace BeneathTheFloor.Tools
         }
 
         /// <summary>
-        /// Start charging the Drill Pike super attack.
+        /// Start charging the Drill Pike super attack, or start reload for Sonic Pulser.
         /// Call this when player starts holding the dig button.
         /// </summary>
         public void StartCharging()
         {
-            // Force set to DrillPike if called (HeldToolController already checks SupportsCharging)
-            if (animationType != ToolAnimationType.DrillPike)
+            if (animationType == ToolAnimationType.SonicPulser)
             {
-                Debug.Log($"[ToolVisual] StartCharging called but animationType is {animationType}, forcing to DrillPike");
-                animationType = ToolAnimationType.DrillPike;
+                // Sonic Pulser uses reload mechanic instead of charge
+                StartReload();
+                return;
             }
+
             if (isCharging) return;
 
             isCharging = true;
             chargeTime = 0f;
-            currentSpinAngle = 0f;
 
             if (chargeCoroutine != null)
             {
                 StopCoroutine(chargeCoroutine);
             }
-            chargeCoroutine = StartCoroutine(DrillPikeChargeCoroutine());
 
-            Debug.Log($"[ToolVisual] StartCharging: isCharging={isCharging}, toolHead={toolHead != null}");
+            currentSpinAngle = 0f;
+            chargeCoroutine = StartCoroutine(DrillPikeChargeCoroutine());
+        }
+
+        /// <summary>
+        /// Start the Sonic Pulser reload sequence.
+        /// Particles swirl into barrel, after RELOAD_DURATION auto-fires.
+        /// </summary>
+        public void StartReload()
+        {
+            if (isReloading) return;
+
+            // Also set isCharging so GetChargeProgress() works for DiggingSystem
+            isCharging = true;
+            chargeTime = 0f;
+            chargePaused = false;
+
+            if (reloadCoroutine != null)
+                StopCoroutine(reloadCoroutine);
+            if (chargeCoroutine != null)
+            {
+                StopCoroutine(chargeCoroutine);
+                chargeCoroutine = null;
+            }
+
+            reloadCoroutine = StartCoroutine(SonicPulserReloadCoroutine());
         }
 
         /// <summary>
         /// Release the charged attack.
-        /// Call this when player releases the dig button after charging.
+        /// For Drill Pike: fires based on charge power.
+        /// For Sonic Pulser: fires charged shot based on current charge level.
         /// </summary>
         public void ReleaseChargedAttack()
         {
+            if (animationType == ToolAnimationType.SonicPulser)
+            {
+                // Sonic Pulser: fire charged shot at current charge level
+                if (isReloading)
+                {
+                    float sonicChargePower = GetChargeProgress();
+
+                    // Stop reload coroutine and clean up
+                    isReloading = false;
+                    isCharging = false;
+                    chargePaused = false;
+
+                    if (reloadCoroutine != null)
+                    {
+                        StopCoroutine(reloadCoroutine);
+                        reloadCoroutine = null;
+                    }
+
+                    // Clean up charge ball and audio
+                    DestroyChargeBall();
+                    if (audioSource != null)
+                    {
+                        audioSource.Stop();
+                        audioSource.loop = false;
+                    }
+
+                    // Return to idle pose then fire
+                    if (animationCoroutine != null)
+                        StopCoroutine(animationCoroutine);
+
+                    transform.localPosition = initialLocalPosition;
+                    transform.localRotation = initialLocalRotation;
+
+                    // Fire the charged shot animation (which fires the projectile)
+                    animationCoroutine = StartCoroutine(SonicPulserChargedShotAnimation(sonicChargePower));
+                }
+                return;
+            }
+
             if (!isCharging) return;
 
             isCharging = false;
@@ -595,22 +705,22 @@ namespace BeneathTheFloor.Tools
                 chargeCoroutine = null;
             }
 
-            // Calculate charge power (0 to 1)
             float chargePower = Mathf.Clamp01(chargeTime / chargeTimeToMax);
 
             if (animationCoroutine != null)
             {
                 StopCoroutine(animationCoroutine);
             }
+
             animationCoroutine = StartCoroutine(DrillPikeSuperHitAnimation(chargePower));
         }
 
         /// <summary>
-        /// Cancel charging without attacking.
+        /// Cancel charging or reload without attacking.
         /// </summary>
         public void CancelCharging()
         {
-            if (!isCharging) return;
+            if (!isCharging && !isReloading) return;
 
             isCharging = false;
             chargeTime = 0f;
@@ -621,10 +731,37 @@ namespace BeneathTheFloor.Tools
                 chargeCoroutine = null;
             }
 
-            // Reset head rotation
+            // Reset head rotation (Drill Pike)
             if (toolHead != null)
             {
                 toolHead.localRotation = headInitialLocalRot;
+            }
+
+            // Clean up Sonic Pulser reload/charge effects
+            if (animationType == ToolAnimationType.SonicPulser)
+            {
+                // Cancel reload
+                isReloading = false;
+                reloadTimer = 0f;
+                chargePaused = false;
+                if (reloadCoroutine != null)
+                {
+                    StopCoroutine(reloadCoroutine);
+                    reloadCoroutine = null;
+                }
+
+                DestroyChargeBall();
+                if (sonicTipGlow != null)
+                    sonicTipGlow.intensity = 0f;
+                transform.localPosition = initialLocalPosition;
+                transform.localRotation = initialLocalRotation;
+            }
+
+            // Stop charge audio
+            if (audioSource != null && audioSource.isPlaying && audioSource.loop)
+            {
+                audioSource.Stop();
+                audioSource.loop = false;
             }
         }
 
@@ -634,9 +771,30 @@ namespace BeneathTheFloor.Tools
         public bool IsCharging() => isCharging;
 
         /// <summary>
-        /// Get current charge progress (0 to 1).
+        /// Get current charge/reload progress (0 to 1).
         /// </summary>
-        public float GetChargeProgress() => Mathf.Clamp01(chargeTime / chargeTimeToMax);
+        public float GetChargeProgress()
+        {
+            if (animationType == ToolAnimationType.SonicPulser)
+            {
+                return reloadTimer / CHARGE_RATE; // Uncapped - grows as long as energy lasts
+            }
+            return Mathf.Clamp01(chargeTime / chargeTimeToMax);
+        }
+
+        /// <summary>
+        /// Check if currently in reload sequence (Sonic Pulser only).
+        /// </summary>
+        public bool IsReloading() => isReloading;
+
+        /// <summary>
+        /// Pause the Sonic Pulser charge (ball stops growing but doesn't fire).
+        /// Called when energy is depleted during charge.
+        /// </summary>
+        public void PauseCharge()
+        {
+            chargePaused = true;
+        }
 
         /// <summary>
         /// Coroutine that spins the drill head while charging.
@@ -801,6 +959,511 @@ namespace BeneathTheFloor.Tools
                 toolHead.localRotation = headInitialLocalRot;
             }
             currentSpinAngle = 0f;
+
+            isAnimating = false;
+            animationCoroutine = null;
+        }
+
+        // ============================================================
+        // TIER 5: SONIC PULSER - Gun-style pulse weapon
+        // ============================================================
+
+        /// <summary>
+        /// Set a dynamically created child GameObject to match the tool's layer.
+        /// This is critical for the overlay camera system (HeldTool layer).
+        /// </summary>
+        private void SetChildLayer(GameObject child)
+        {
+            if (child == null) return;
+            child.layer = gameObject.layer;
+        }
+
+        /// <summary>
+        /// Find the ProjectileExitGizmo on this tool (cached).
+        /// </summary>
+        private ProjectileExitGizmo GetProjectileExitGizmo()
+        {
+            if (projectileExitGizmo == null)
+                projectileExitGizmo = GetComponentInChildren<ProjectileExitGizmo>(true);
+            return projectileExitGizmo;
+        }
+
+        /// <summary>
+        /// Find or create the tip point for particle effects.
+        /// Prefers ProjectileExitGizmo if placed on the tool.
+        /// </summary>
+        private Transform GetSonicTipPoint()
+        {
+            // Prefer the gizmo if it exists
+            var gizmo = GetProjectileExitGizmo();
+            if (gizmo != null)
+            {
+                sonicTipPoint = gizmo.transform;
+                return sonicTipPoint;
+            }
+
+            if (sonicTipPoint != null) return sonicTipPoint;
+
+            // Try to find a child named "tip" or "muzzle" or "barrel"
+            foreach (Transform child in transform)
+            {
+                string n = child.name.ToLower();
+                if (n.Contains("tip") || n.Contains("muzzle") || n.Contains("barrel") || n.Contains("head"))
+                {
+                    sonicTipPoint = child;
+                    return sonicTipPoint;
+                }
+            }
+
+            // Fallback: create a tip point at the front of the tool
+            GameObject tipObj = new GameObject("SonicTipPoint");
+            tipObj.transform.SetParent(transform, false);
+            tipObj.transform.localPosition = new Vector3(0f, 0f, 0.5f);
+            SetChildLayer(tipObj);
+            sonicTipPoint = tipObj.transform;
+            return sonicTipPoint;
+        }
+
+
+
+        /// <summary>
+        /// Create or get the tip glow light.
+        /// </summary>
+        private Light GetSonicTipGlow()
+        {
+            if (sonicTipGlow != null) return sonicTipGlow;
+
+            Transform tip = GetSonicTipPoint();
+            GameObject lightObj = new GameObject("SonicTipGlow");
+            lightObj.transform.SetParent(tip, false);
+            lightObj.transform.localPosition = Vector3.zero;
+            SetChildLayer(lightObj);
+
+            sonicTipGlow = lightObj.AddComponent<Light>();
+            sonicTipGlow.type = LightType.Point;
+            sonicTipGlow.color = sonicPulseColor;
+            sonicTipGlow.range = 2f;
+            sonicTipGlow.intensity = 0f;
+            sonicTipGlow.shadows = LightShadows.None;
+
+            return sonicTipGlow;
+        }
+
+        /// <summary>
+        /// Normal shot animation - fires round orb projectile from barrel with recoil.
+        /// Uses a mesh-based projectile (sphere) instead of ParticleSystem for overlay camera compatibility.
+        /// </summary>
+        private IEnumerator SonicPulserShotAnimation()
+        {
+            isAnimating = true;
+            Vector3 startPos = initialLocalPosition;
+            Quaternion startRot = initialLocalRotation;
+
+            // Fire projectile - small visual ball, dig radius = 75% of normal tool dig
+            float quickDigRadius = Digging.DiggingSystem.Instance != null ? Digging.DiggingSystem.Instance.DigRadius : 0.5f;
+            quickDigRadius *= Machines.UpgradeStation.ToolRadiusMultiplier * Machines.UpgradeStation.ToolTierMultiplier * 0.75f;
+            FireSonicProjectile(0.15f, quickDigRadius, 20f, 3f, sonicPulseColor);
+
+            // Flash tip glow
+            var glow = GetSonicTipGlow();
+            glow.intensity = 4f;
+            glow.color = sonicPulseColor;
+
+            // === PHASE 1: RECOIL BACK ===
+            Vector3 recoilPos = startPos + new Vector3(0f, 0.02f, -sonicRecoilDistance);
+            Quaternion recoilRot = startRot * Quaternion.Euler(-5f, 0f, 0f);
+
+            float elapsed = 0f;
+            float duration = 0.05f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = EaseOutCubic(elapsed / duration);
+                transform.localPosition = Vector3.Lerp(startPos, recoilPos, t);
+                transform.localRotation = Quaternion.Slerp(startRot, recoilRot, t);
+                yield return null;
+            }
+
+            // Projectile handles digging on terrain impact
+            PlayDigSoundAndEffects();
+
+            // === PHASE 2: SMALL VIBRATION (recoil shake) ===
+            Vector3 shakeBase = recoilPos;
+            for (int i = 0; i < 3; i++)
+            {
+                float shakeX = Random.Range(-0.006f, 0.006f);
+                float shakeY = Random.Range(-0.006f, 0.006f);
+                transform.localPosition = shakeBase + new Vector3(shakeX, shakeY, 0);
+                yield return new WaitForSeconds(0.02f);
+            }
+
+            // === PHASE 3: RETURN TO IDLE ===
+            Vector3 endPos = transform.localPosition;
+            Quaternion endRot = transform.localRotation;
+
+            elapsed = 0f;
+            duration = 0.15f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = EaseOutBack(elapsed / duration);
+                transform.localPosition = Vector3.Lerp(endPos, startPos, t);
+                transform.localRotation = Quaternion.Slerp(endRot, startRot, t);
+
+                // Fade glow
+                glow.intensity = Mathf.Lerp(4f, 0f, t);
+
+                yield return null;
+            }
+
+            transform.localPosition = startPos;
+            transform.localRotation = startRot;
+            glow.intensity = 0f;
+            isAnimating = false;
+            animationCoroutine = null;
+        }
+
+        /// <summary>
+        /// Fire a Sonic Pulser projectile (sphere) in world space.
+        /// Uses ProjectileExitGizmo for spawn position and direction.
+        /// Projectile is on layer 0 (Default) so it's rendered by the main camera
+        /// and properly occluded by terrain. SonicProjectile handles movement,
+        /// terrain collision, and digging on impact.
+        /// </summary>
+        /// <param name="visualScale">Visual diameter of the sphere in world units</param>
+        /// <param name="digRadius">Actual dig radius on terrain impact</param>
+        /// <param name="speed">Travel speed in units/sec</param>
+        /// <param name="lifetime">Max lifetime before auto-destroy</param>
+        /// <param name="color">Projectile color (emissive)</param>
+        private void FireSonicProjectile(float visualScale, float digRadius, float speed, float lifetime, Color color)
+        {
+            var gizmo = GetProjectileExitGizmo();
+            Camera cam = Camera.main;
+            if (gizmo == null && cam == null) return;
+
+            // Spawn position and direction from gizmo (or fallback to camera)
+            Vector3 spawnPos = gizmo != null ? gizmo.ExitPoint : cam.transform.position;
+            Vector3 fireDir = gizmo != null ? gizmo.FireDirection : cam.transform.forward;
+
+            // Offset spawn slightly forward so it appears in front of the tool overlay
+            spawnPos += fireDir * 0.5f;
+
+            // Create sphere in world space
+            GameObject orb = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            orb.name = "SonicProjectile";
+            orb.layer = 0; // Default layer - rendered by main camera, occluded by terrain
+            orb.transform.position = spawnPos;
+            orb.transform.localScale = Vector3.one * visualScale;
+
+            // Remove default collider (SonicProjectile uses raycast)
+            var col = orb.GetComponent<Collider>();
+            if (col != null) Object.Destroy(col);
+
+            // Set up emissive material
+            var orbRenderer = orb.GetComponent<MeshRenderer>();
+            orbRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            Shader shader = Shader.Find("Universal Render Pipeline/Lit");
+            if (shader == null) shader = Shader.Find("Unlit/Color");
+            if (shader != null)
+            {
+                var mat = new Material(shader);
+                mat.color = color;
+                if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", color);
+                if (mat.HasProperty("_EmissionColor"))
+                {
+                    mat.EnableKeyword("_EMISSION");
+                    mat.SetColor("_EmissionColor", color * 3f);
+                }
+                orbRenderer.material = mat;
+            }
+
+            // Dig strength always max (1.0) since DigOperation clamps to 0-1.
+            // The dig radius controls the hole size.
+            float digStrength = 1.0f;
+
+            // Attach projectile behavior
+            var projectile = orb.AddComponent<SonicProjectile>();
+            projectile.Init(fireDir, speed, lifetime, digRadius, digStrength);
+        }
+
+        /// <summary>
+        /// Create the charge ball visual at the barrel tip during reload.
+        /// Parented to the tip (tool hierarchy, layer 8) so it renders on the overlay camera
+        /// and stays at the barrel. Local scale accounts for the tool's 30x lossy scale.
+        /// </summary>
+        private void CreateChargeBall(Transform tip)
+        {
+            DestroyChargeBall(); // Clean up any existing one
+
+            chargeBallObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            chargeBallObj.name = "SonicChargeBall";
+            chargeBallObj.layer = gameObject.layer; // Layer 8 for overlay camera
+            chargeBallObj.transform.SetParent(tip, false);
+            chargeBallObj.transform.localPosition = Vector3.zero;
+            chargeBallObj.transform.localScale = Vector3.one * 0.0001f; // Start invisible
+
+            // Remove collider
+            var col = chargeBallObj.GetComponent<Collider>();
+            if (col != null) Object.Destroy(col);
+
+            // Set up glowing material
+            var renderer = chargeBallObj.GetComponent<MeshRenderer>();
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+            // Use tool's own material (proven to work on overlay camera)
+            Material toolMat = null;
+            var toolRenderers = GetComponentsInChildren<MeshRenderer>(true);
+            foreach (var r in toolRenderers)
+            {
+                if (r.material != null && r.material.shader != null)
+                {
+                    toolMat = r.material;
+                    break;
+                }
+            }
+
+            Color chargeColor = Color.Lerp(sonicPulseColor, sonicChargedPulseColor, 0.5f);
+            if (toolMat != null)
+            {
+                var mat = new Material(toolMat);
+                mat.color = chargeColor;
+                if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", chargeColor);
+                if (mat.HasProperty("_EmissionColor"))
+                {
+                    mat.EnableKeyword("_EMISSION");
+                    mat.SetColor("_EmissionColor", chargeColor * 2f);
+                }
+                renderer.material = mat;
+            }
+        }
+
+        /// <summary>
+        /// Update the charge ball size during reload.
+        /// Ball grows from tiny to a proportional size at the barrel tip.
+        /// Uses tip's lossy scale to convert desired world size to local scale.
+        /// </summary>
+        private void UpdateChargeBall(Transform tip, float progress)
+        {
+            if (chargeBallObj == null) return;
+
+            // Size grows without cap - sqrt curve for fast initial growth, keeps growing
+            float minWorldSize = 0.01f;
+            float growthScale = 0.12f; // Size per sqrt(progress)
+            float currentWorldSize = minWorldSize + growthScale * Mathf.Sqrt(progress);
+
+            // Convert world size to local scale (accounting for tool's ~30x scale)
+            float parentScale = Mathf.Max(tip.lossyScale.x, 0.01f);
+            float localScale = currentWorldSize / parentScale;
+            chargeBallObj.transform.localScale = Vector3.one * localScale;
+
+            // Pulse the emission for visual feedback
+            var renderer = chargeBallObj.GetComponent<MeshRenderer>();
+            if (renderer != null && renderer.material != null)
+            {
+                float pulse = 1f + Mathf.Sin(Time.time * 8f) * 0.3f;
+                Color chargeColor = Color.Lerp(sonicPulseColor, sonicChargedPulseColor, progress);
+                if (renderer.material.HasProperty("_EmissionColor"))
+                {
+                    renderer.material.SetColor("_EmissionColor", chargeColor * (2f + progress * 3f) * pulse);
+                }
+                if (renderer.material.HasProperty("_BaseColor"))
+                {
+                    renderer.material.SetColor("_BaseColor", chargeColor);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Destroy the charge ball visual.
+        /// </summary>
+        private void DestroyChargeBall()
+        {
+            if (chargeBallObj != null)
+            {
+                Object.Destroy(chargeBallObj);
+                chargeBallObj = null;
+            }
+        }
+
+        /// <summary>
+        /// Reload coroutine - charge ball grows at barrel while player holds trigger.
+        /// Charges indefinitely while isReloading is true.
+        /// When chargePaused is true (energy depleted), ball stops growing but stays visible.
+        /// Does NOT auto-fire - player must release trigger (ReleaseChargedAttack handles firing).
+        /// </summary>
+        private IEnumerator SonicPulserReloadCoroutine()
+        {
+            isReloading = true;
+            reloadTimer = 0f;
+
+            var glow = GetSonicTipGlow();
+            glow.color = new Color(0.4f, 0.85f, 1f, 1f); // Cyan during reload
+
+            // Create the charging ball at the gizmo's charge point
+            var gizmo = GetProjectileExitGizmo();
+            Transform chargePoint = gizmo != null ? gizmo.ChargeBallTransform : GetSonicTipPoint();
+            CreateChargeBall(chargePoint);
+
+            // Play charge sound (looping)
+            if (chargeSpinSound != null && audioSource != null)
+            {
+                audioSource.clip = chargeSpinSound;
+                audioSource.loop = true;
+                audioSource.pitch = 0.6f;
+                audioSource.Play();
+            }
+
+            Vector3 startPos = initialLocalPosition;
+            Quaternion startRot = initialLocalRotation;
+
+            // Reload tilt target: tool tilts up slightly (loading pose)
+            Quaternion reloadTiltRot = startRot * Quaternion.Euler(-12f, 3f, 0f);
+            Vector3 reloadTiltPos = startPos + new Vector3(0.01f, 0.03f, -0.04f);
+
+            while (isReloading)
+            {
+                // Only grow the charge when not paused (energy not depleted)
+                if (!chargePaused)
+                {
+                    reloadTimer += Time.deltaTime;
+                }
+
+                float progress = reloadTimer / CHARGE_RATE; // Uncapped
+
+                // Smooth tilt into reload pose (first half), hold (second half)
+                float tiltT = Mathf.Clamp01(progress * 2.5f); // Reaches full tilt at 40%
+                tiltT = EaseOutCubic(tiltT);
+                Quaternion currentRot = Quaternion.Slerp(startRot, reloadTiltRot, tiltT);
+                Vector3 currentPos = Vector3.Lerp(startPos, reloadTiltPos, tiltT);
+
+                // Add escalating vibration (reduced when paused)
+                float vibScale = chargePaused ? 0.3f : 1f;
+                float vibIntensity = Mathf.Lerp(0.001f, 0.01f, progress) * vibScale;
+                float vibX = (Mathf.PerlinNoise(Time.time * 40f, 0f) - 0.5f) * vibIntensity * 2f;
+                float vibY = (Mathf.PerlinNoise(0f, Time.time * 40f) - 0.5f) * vibIntensity * 2f;
+
+                transform.localPosition = currentPos + new Vector3(vibX, vibY, 0f);
+                transform.localRotation = currentRot;
+
+                // Growing glow (asymptotic so it doesn't go infinite)
+                float glowT = 1f - 1f / (1f + progress);  // 0→0, 1→0.5, 3→0.75, ∞→1
+                glow.intensity = 0.5f + glowT * 8f;
+                glow.range = 1f + glowT * 5f;
+
+                // Grow the charge ball - from tiny to the charged shot size
+                UpdateChargeBall(chargePoint, progress);
+
+                // Audio pitch rises with charge progress (hold pitch when paused)
+                if (audioSource != null && audioSource.isPlaying)
+                {
+                    audioSource.pitch = Mathf.Lerp(0.6f, 1.4f, progress);
+                }
+
+                yield return null;
+            }
+
+            // Coroutine exits when isReloading is set to false externally
+            // (by ReleaseChargedAttack or CancelCharging)
+            reloadCoroutine = null;
+        }
+
+        /// <summary>
+        /// Charged shot animation - fires bigger, faster orb with heavy recoil.
+        /// Called after reload completes.
+        /// </summary>
+        private IEnumerator SonicPulserChargedShotAnimation(float chargePower)
+        {
+            isAnimating = true;
+            Vector3 startPos = initialLocalPosition;
+            Quaternion startRot = initialLocalRotation;
+
+            // Stop any remaining charge/reload effects
+            DestroyChargeBall();
+
+            if (audioSource != null)
+            {
+                audioSource.Stop();
+                audioSource.loop = false;
+            }
+
+            // Play release sound
+            if (chargeReleaseSound != null && audioSource != null)
+            {
+                audioSource.pitch = 0.8f + chargePower * 0.4f;
+                audioSource.PlayOneShot(chargeReleaseSound, 0.8f + chargePower * 0.4f);
+            }
+
+            // Fire charged projectile - visual matches the charge ball size (same formula as UpdateChargeBall)
+            float chargedVisual = 0.01f + 0.12f * Mathf.Sqrt(chargePower);
+            float baseDigRadius = Digging.DiggingSystem.Instance != null ? Digging.DiggingSystem.Instance.DigRadius : 0.5f;
+            float chargedDigRadius = baseDigRadius * Machines.UpgradeStation.ToolRadiusMultiplier
+                * Machines.UpgradeStation.ToolTierMultiplier * (1f + chargePower * 2f);
+            float chargedSpeed = 22f + Mathf.Min(chargePower, 5f) * 15f; // Speed caps at reasonable value
+            Color chargedColor = Color.Lerp(sonicPulseColor, sonicChargedPulseColor, Mathf.Clamp01(chargePower));
+            FireSonicProjectile(chargedVisual, chargedDigRadius, chargedSpeed, 3f, chargedColor);
+
+            // Flash tip glow brighter
+            var glow = GetSonicTipGlow();
+            float glowCharge = Mathf.Min(chargePower, 5f);
+            glow.intensity = 6f + glowCharge * 8f;
+            glow.color = Color.Lerp(sonicPulseColor, Color.white, Mathf.Clamp01(chargePower * 0.5f));
+            glow.range = 3f + glowCharge * 4f;
+
+            // === PHASE 1: STRONG RECOIL ===
+            float recoilDist = sonicRecoilDistance * (1f + Mathf.Min(chargePower, 3f) * 2.5f);
+            Vector3 recoilPos = startPos + new Vector3(0f, 0.04f, -recoilDist);
+            Quaternion recoilRot = startRot * Quaternion.Euler(-10f - chargePower * 8f, 0f, 0f);
+
+            float elapsed = 0f;
+            float duration = 0.04f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = EaseOutCubic(elapsed / duration);
+                transform.localPosition = Vector3.Lerp(startPos, recoilPos, t);
+                transform.localRotation = Quaternion.Slerp(startRot, recoilRot, t);
+                yield return null;
+            }
+
+            // Projectile handles digging on terrain impact
+            PlayDigSoundAndEffects();
+
+            // === PHASE 2: HEAVY VIBRATION/SHAKE ===
+            int shakeCount = 4 + Mathf.RoundToInt(chargePower * 5);
+            float shakeIntensity = 0.008f + chargePower * 0.015f;
+            Vector3 shakeBase = recoilPos;
+
+            for (int i = 0; i < shakeCount; i++)
+            {
+                float sx = Random.Range(-shakeIntensity, shakeIntensity);
+                float sy = Random.Range(-shakeIntensity, shakeIntensity);
+                transform.localPosition = shakeBase + new Vector3(sx, sy, 0);
+                yield return new WaitForSeconds(0.025f);
+            }
+
+            // === PHASE 3: RETURN TO IDLE ===
+            Vector3 endPos = transform.localPosition;
+            Quaternion endRot = transform.localRotation;
+
+            elapsed = 0f;
+            duration = 0.25f + chargePower * 0.15f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = EaseOutBack(elapsed / duration);
+                transform.localPosition = Vector3.Lerp(endPos, startPos, t);
+                transform.localRotation = Quaternion.Slerp(endRot, startRot, t);
+
+                // Fade glow
+                glow.intensity = Mathf.Lerp(6f + chargePower * 8f, 0f, t);
+
+                yield return null;
+            }
+
+            // Reset
+            transform.localPosition = startPos;
+            transform.localRotation = startRot;
+            glow.intensity = 0f;
 
             isAnimating = false;
             animationCoroutine = null;

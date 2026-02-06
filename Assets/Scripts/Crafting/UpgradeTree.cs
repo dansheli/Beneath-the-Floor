@@ -129,6 +129,9 @@ namespace BeneathTheFloor.Crafting
         // Winch upgrades
         WinchCableLength,  // Combined: length + speed + power
         WinchMotorSpeed,   // DEPRECATED - now included in WinchCableLength
-        WinchMotorPower    // DEPRECATED - now included in WinchCableLength
+        WinchMotorPower,   // DEPRECATED - now included in WinchCableLength
+
+        // Sonic Pulser purchase
+        SonicPulserPurchase  // One-time purchase of Tool 5
     }
 }

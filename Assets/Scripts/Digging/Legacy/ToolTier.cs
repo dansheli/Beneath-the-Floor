@@ -16,7 +16,10 @@ namespace BeneathTheFloor.Digging
         /// <summary>Tier 2 - Iron pickaxe</summary>
         IronPickaxe = 2,
 
-        /// <summary>Tier 3 - Steel pickaxe (max tier)</summary>
-        SteelPickaxe = 3
+        /// <summary>Tier 3 - Steel pickaxe</summary>
+        SteelPickaxe = 3,
+
+        /// <summary>Tier 4 - Sonic Pulser</summary>
+        SonicPulser = 4
     }
 }

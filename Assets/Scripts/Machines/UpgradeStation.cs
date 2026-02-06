@@ -368,6 +368,27 @@ namespace BeneathTheFloor.Machines
             // NOTE: WinchMotorSpeed and WinchMotorPower upgrades removed
             // Speed and Power are now included in the WinchCableLength upgrade
 
+            // ==================== SONIC PULSER PURCHASE (Tool 5) ====================
+            // One-time purchase that appears after ALL Tool 4 upgrades are maxed.
+            // Separate from tool_tier to avoid breaking MaxOutToolUpgrades().
+            runtimeUpgrades.Add(new RuntimeUpgrade
+            {
+                upgradeId = "sonic_pulser",
+                upgradeName = "Sonic Pulser",
+                description = "Purchase the Sonic Pulser - an advanced digging tool.",
+                category = UpgradeCategory.Tools,
+                upgradeType = UpgradeType.SonicPulserPurchase,
+                maxLevel = 1,
+                currentLevel = 0,
+                valuesPerLevel = new float[] { 0f, 1f },
+                creditCostsPerLevel = new int[] { 10000 },
+                baseValue = 0f,
+                valuePerLevel = 1f,
+                baseCreditCost = 10000,
+                creditCostMultiplier = 1.0f,
+                baseCosts = new List<ResourceRequirement>()
+            });
+
             if (enableDebugLogs) Debug.Log($"[UpgradeStation] Created {runtimeUpgrades.Count} default runtime upgrades (Balance V1)");
         }
 
@@ -909,6 +930,12 @@ namespace BeneathTheFloor.Machines
             {
                 return false; // Tier transitions now handled via tool_power
             }
+            // Special handling for sonic_pulser: only available when all Tool 4 upgrades are maxed
+            else if (upgrade.upgradeId == "sonic_pulser")
+            {
+                if (!IsSonicPulserAvailable()) return false;
+                if (upgrade.IsMaxLevel) return false; // Already purchased
+            }
             else if (upgrade.IsMaxLevel)
             {
                 return false;
@@ -1030,7 +1057,27 @@ namespace BeneathTheFloor.Machines
             }
 
             // === STEP 3: Apply upgrade ===
-            if (isTierTransition)
+            bool isSonicPulserPurchase = (upgrade.upgradeId == "sonic_pulser");
+
+            if (isSonicPulserPurchase)
+            {
+                // Sonic Pulser purchase: set level to 1 and switch to Tool 5
+                upgrade.currentLevel = 1;
+                upgradeLevels[upgrade.upgradeId] = 1;
+                PlayerPrefs.SetInt("RuntimeUpgrade_sonic_pulser", 1);
+
+                // Switch to Tool 5 in HeldToolController
+                if (HeldToolController.Instance != null)
+                {
+                    HeldToolController.Instance.SetActiveTool(4); // Index 4 = Sonic Pulser
+                    if (enableDebugLogs) Debug.Log("[UpgradeStation] Switched to Tool 5: Sonic Pulser");
+                }
+
+                // Save the tool index so it persists
+                PlayerPrefs.SetInt("PlayerToolIndex", 4);
+                PlayerPrefs.Save();
+            }
+            else if (isTierTransition)
             {
                 // Tier transition: reset tool_power to 0, increment tool_tier
                 upgrade.currentLevel = 0;
@@ -1170,6 +1217,9 @@ namespace BeneathTheFloor.Machines
                 case UpgradeType.ToolTierUp:
                     int newTier = upgrade.currentLevel + 1;
                     message = $"Tool upgraded to Tier {newTier}! All bonuses reset.";
+                    break;
+                case UpgradeType.SonicPulserPurchase:
+                    message = "Sonic Pulser acquired!";
                     break;
                 default:
                     message = $"{upgrade.upgradeName} upgraded to Lv{upgrade.currentLevel}!";
@@ -1339,6 +1389,15 @@ namespace BeneathTheFloor.Machines
 
                 case UpgradeType.ToolPower:
                     ApplyToolPowerUpgrade(newValue);
+                    break;
+
+                case UpgradeType.SonicPulserPurchase:
+                    // Sonic Pulser purchase - switch to Tool 5 visual
+                    if (HeldToolController.Instance != null)
+                    {
+                        HeldToolController.Instance.SetActiveTool(4);
+                    }
+                    if (enableDebugLogs) Debug.Log($"[UpgradeStation] Sonic Pulser purchased! (level {upgrade.currentLevel})");
                     break;
 
                 case UpgradeType.ToolTierUp:
@@ -1682,6 +1741,28 @@ namespace BeneathTheFloor.Machines
         }
 
         /// <summary>
+        /// Returns true when the Sonic Pulser purchase is available:
+        /// both tool_tier AND tool_power must be at max level.
+        /// </summary>
+        public bool IsSonicPulserAvailable()
+        {
+            var tierUpgrade = GetRuntimeUpgradeById("tool_tier");
+            var powerUpgrade = GetRuntimeUpgradeById("tool_power");
+            if (tierUpgrade == null || powerUpgrade == null) return false;
+            return tierUpgrade.currentLevel >= tierUpgrade.maxLevel
+                && powerUpgrade.currentLevel >= powerUpgrade.maxLevel;
+        }
+
+        /// <summary>
+        /// Returns true when the Sonic Pulser has been purchased.
+        /// </summary>
+        public bool HasSonicPulser()
+        {
+            var sonicUpgrade = GetRuntimeUpgradeById("sonic_pulser");
+            return sonicUpgrade != null && sonicUpgrade.currentLevel >= 1;
+        }
+
+        /// <summary>
         /// Maxes out tool_power and tool_tier upgrades so the upgrade station
         /// cannot downgrade a player who already has Tool 4.
         /// Called when the player picks up the Drill Pike externally.
@@ -2007,6 +2088,15 @@ namespace BeneathTheFloor.Machines
                     if (enableDebugLogs) Debug.Log($"[UpgradeStation] Applied Dig Power Lv{upgrade.currentLevel}: {value:F2}x");
                     return true;
 
+                case UpgradeType.SonicPulserPurchase:
+                    // On load, if purchased, switch to Sonic Pulser
+                    if (upgrade.currentLevel >= 1 && HeldToolController.Instance != null)
+                    {
+                        HeldToolController.Instance.SetActiveTool(4);
+                        if (enableDebugLogs) Debug.Log("[UpgradeStation] Restored Sonic Pulser (Tool 5) from save");
+                    }
+                    return true;
+
                 case UpgradeType.ToolTierUp:
                     // Apply tier multiplier and update static properties
                     ToolTierMultiplier = value;
@@ -2134,6 +2224,8 @@ namespace BeneathTheFloor.Machines
                 case 0: return "Wooden Digger";
                 case 1: return "Basic Pickaxe";
                 case 2: return "Iron Pickaxe";
+                case 3: return "Drill Pike";
+                case 4: return "Sonic Pulser";
                 default: return "Unknown Tool";
             }
         }

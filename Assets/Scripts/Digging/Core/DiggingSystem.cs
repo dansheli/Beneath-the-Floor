@@ -66,6 +66,8 @@ namespace BeneathTheFloor.Digging
         [SerializeField] private float tool3MaxDepth = 30f;
         [Tooltip("Max dig depth for Tool 4 (Drill Pike) - all tiers")]
         [SerializeField] private float tool4MaxDepth = 50f;
+        [Tooltip("Max dig depth for Tool 5 (Sonic Pulser) - all tiers")]
+        [SerializeField] private float tool5MaxDepth = 80f;
 
         [Header("Audio")]
         [Tooltip("Dig hit sounds (plays randomly on each dig).")]
@@ -114,6 +116,12 @@ namespace BeneathTheFloor.Digging
         private bool _isHoldingDigButton = false;
         private float _holdStartTime = 0f;
         private const float CHARGE_THRESHOLD = 0.2f; // Min hold time to trigger charged attack
+
+        // Sonic Pulser energy drain
+        private const float SONIC_SHOT_ENERGY_COST = 2f;
+        private const float SONIC_CHARGE_ENERGY_PER_SECOND = 10f;
+        private float _sonicChargeEnergySpent = 0f; // Total energy drained during current charge
+        private bool _sonicChargeStarted = false; // True once hold passes threshold and charging begins
 
         // Tool provider
         private IDigToolProvider _toolProvider;
@@ -406,7 +414,15 @@ namespace BeneathTheFloor.Digging
             // Check if current tool supports charging (Drill Pike - Tool 4)
             bool supportsCharging = HeldToolController.Instance != null && HeldToolController.Instance.SupportsCharging();
 
-            if (supportsCharging)
+            // Check if this is a Sonic Pulser (index 4) vs Drill Pike (index 3)
+            bool isSonicPulser = supportsCharging && HeldToolController.Instance.CurrentToolIndex == 4;
+
+            if (isSonicPulser)
+            {
+                // SONIC PULSER: Gun-style with energy drain during charge
+                HandleSonicPulserInput(digButtonDown, digButtonHeld, digButtonUp);
+            }
+            else if (supportsCharging)
             {
                 // DRILL PIKE: Handle charged attack input
                 HandleDrillPikeInput(digButtonDown, digButtonHeld, digButtonUp);
@@ -493,6 +509,154 @@ namespace BeneathTheFloor.Digging
         }
 
         /// <summary>
+        /// Handle input for Sonic Pulser - gun-style with charge mechanic.
+        /// Quick tap = instant shot (energy consumed on fire).
+        /// Hold past threshold = charge begins, energy drains, release fires charged shot.
+        /// </summary>
+        private void HandleSonicPulserInput(bool digPressed, bool digHeld, bool digReleased)
+        {
+            var energy = Energy.EnergyManager.Instance;
+
+            // Button just pressed - record time, don't consume energy yet
+            if (digPressed)
+            {
+                _isHoldingDigButton = true;
+                _holdStartTime = Time.time;
+                _sonicChargeEnergySpent = 0f;
+                _sonicChargeStarted = false;
+
+                if (enableDebugLogs)
+                    Debug.Log("[DiggingSystem] Sonic Pulser: Button pressed, waiting for tap or hold");
+            }
+
+            // While holding - start charging after threshold
+            if (digHeld && _isHoldingDigButton)
+            {
+                float holdDuration = Time.time - _holdStartTime;
+
+                // Past threshold: begin charging if not already started
+                if (holdDuration >= CHARGE_THRESHOLD && !_sonicChargeStarted)
+                {
+                    // Check if we can afford to charge
+                    if (energy != null && !energy.HasEnergy(SONIC_SHOT_ENERGY_COST))
+                    {
+                        if (enableDebugLogs)
+                            Debug.Log("[DiggingSystem] Sonic Pulser: Not enough energy to charge");
+                        if (EnergyUI.Instance != null)
+                            EnergyUI.Instance.ShowEnergyDrinkHint();
+                        if (ConsumablesHUD.Instance != null)
+                            ConsumablesHUD.Instance.HighlightDrink();
+                        _isHoldingDigButton = false;
+                        return;
+                    }
+
+                    // Consume base cost and start charging
+                    if (!disableEnergyConsumption && energy != null)
+                    {
+                        energy.ConsumeEnergy(SONIC_SHOT_ENERGY_COST);
+                        energy.ResetRegenCooldown();
+                    }
+
+                    _sonicChargeStarted = true;
+                    if (HeldToolController.Instance != null)
+                    {
+                        HeldToolController.Instance.StartCharging();
+                    }
+
+                    if (enableDebugLogs)
+                        Debug.Log("[DiggingSystem] Sonic Pulser: Charge started");
+                }
+
+                // Drain energy while charging
+                if (_sonicChargeStarted)
+                {
+                    float drainAmount = SONIC_CHARGE_ENERGY_PER_SECOND * Time.deltaTime;
+
+                    if (!disableEnergyConsumption && energy != null)
+                    {
+                        if (energy.HasEnergy(drainAmount))
+                        {
+                            energy.ConsumeEnergy(drainAmount);
+                            energy.ResetRegenCooldown();
+                            _sonicChargeEnergySpent += drainAmount;
+                        }
+                        else
+                        {
+                            // Out of energy - pause charge (ball stops growing)
+                            if (enableDebugLogs)
+                                Debug.Log("[DiggingSystem] Sonic Pulser: Energy depleted, pausing charge");
+
+                            var toolVisual = HeldToolController.Instance?.GetCurrentToolVisual();
+                            if (toolVisual != null)
+                            {
+                                toolVisual.PauseCharge();
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Button released - fire!
+            if (digReleased && _isHoldingDigButton)
+            {
+                _isHoldingDigButton = false;
+
+                if (_sonicChargeStarted)
+                {
+                    // Was charging - fire charged shot at current charge level
+                    _sonicChargeStarted = false;
+                    if (HeldToolController.Instance != null)
+                    {
+                        HeldToolController.Instance.ReleaseChargedAttack();
+                    }
+
+                    if (enableDebugLogs)
+                        Debug.Log($"[DiggingSystem] Sonic Pulser: Released charged shot. Energy spent: {_sonicChargeEnergySpent:F1}");
+                }
+                else
+                {
+                    // Quick tap - consume energy now and fire immediately
+                    if (energy != null && !energy.HasEnergy(SONIC_SHOT_ENERGY_COST))
+                    {
+                        if (enableDebugLogs)
+                            Debug.Log("[DiggingSystem] Sonic Pulser: Not enough energy for quick shot");
+                        if (EnergyUI.Instance != null)
+                            EnergyUI.Instance.ShowEnergyDrinkHint();
+                        if (ConsumablesHUD.Instance != null)
+                            ConsumablesHUD.Instance.HighlightDrink();
+                        return;
+                    }
+
+                    if (!disableEnergyConsumption && energy != null)
+                    {
+                        energy.ConsumeEnergy(SONIC_SHOT_ENERGY_COST);
+                        energy.ResetRegenCooldown();
+                    }
+
+                    if (HeldToolController.Instance != null)
+                    {
+                        HeldToolController.Instance.PlayDigAnimation();
+                    }
+
+                    if (enableDebugLogs)
+                        Debug.Log("[DiggingSystem] Sonic Pulser: Quick pulse shot");
+                }
+            }
+
+            // Edge case: button no longer held but state thinks it is
+            if (!digHeld && _isHoldingDigButton)
+            {
+                if (_sonicChargeStarted)
+                {
+                    _sonicChargeStarted = false;
+                    if (HeldToolController.Instance != null)
+                        HeldToolController.Instance.CancelCharging();
+                }
+                _isHoldingDigButton = false;
+            }
+        }
+
+        /// <summary>
         /// Cancel any ongoing charging.
         /// </summary>
         private void CancelCharging()
@@ -500,6 +664,7 @@ namespace BeneathTheFloor.Digging
             if (_isHoldingDigButton)
             {
                 _isHoldingDigButton = false;
+                _sonicChargeStarted = false;
                 if (HeldToolController.Instance != null)
                 {
                     HeldToolController.Instance.CancelCharging();
@@ -552,12 +717,13 @@ namespace BeneathTheFloor.Digging
                 1 => tool2MaxDepth,
                 2 => tool3MaxDepth,
                 3 => tool4MaxDepth,
+                4 => tool5MaxDepth,
                 _ => tool1MaxDepth
             };
 
             if (maxDepth > 0f && depthAtPosition > maxDepth)
             {
-                string toolName = toolIndex switch { 0 => "Shovel", 1 => "Heavy Spade", 2 => "Pickaxe", 3 => "Drill Pike", _ => "Tool" };
+                string toolName = toolIndex switch { 0 => "Shovel", 1 => "Heavy Spade", 2 => "Pickaxe", 3 => "Drill Pike", 4 => "Sonic Pulser", _ => "Tool" };
                 if (enableDebugLogs)
                     Debug.Log($"[DiggingSystem] DEPTH BLOCKED: {toolName} cannot dig at {depthAtPosition:F1}m (max={maxDepth}m)");
                 PlayBlockedSound();
@@ -857,19 +1023,20 @@ namespace BeneathTheFloor.Digging
                 1 => tool2MaxDepth,  // Tool 2: Heavy Spade - 22m
                 2 => tool3MaxDepth,  // Tool 3: Pickaxe - 30m
                 3 => tool4MaxDepth,  // Tool 4: Drill Pike - 50m
+                4 => tool5MaxDepth,  // Tool 5: Sonic Pulser - 80m
                 _ => tool1MaxDepth
             };
 
             if (enableDebugLogs)
             {
-                string toolName = toolIndex switch { 0 => "Shovel", 1 => "Heavy Spade", 2 => "Pickaxe", 3 => "Drill Pike", _ => "Tool" };
+                string toolName = toolIndex switch { 0 => "Shovel", 1 => "Heavy Spade", 2 => "Pickaxe", 3 => "Drill Pike", 4 => "Sonic Pulser", _ => "Tool" };
                 Debug.Log($"[DiggingSystem] Tool {toolIndex + 1} ({toolName}), maxDepth: {maxDepth}m, current depth: {depthAtPosition:F1}m");
             }
 
             // DEPTH LIMIT CHECK - Only restriction that matters
             if (maxDepth > 0f && depthAtPosition > maxDepth)
             {
-                string toolName = toolIndex switch { 0 => "Shovel", 1 => "Heavy Spade", 2 => "Pickaxe", _ => "Tool" };
+                string toolName = toolIndex switch { 0 => "Shovel", 1 => "Heavy Spade", 2 => "Pickaxe", 3 => "Drill Pike", 4 => "Sonic Pulser", _ => "Tool" };
                 if (enableDebugLogs)
                 {
                     Debug.Log($"[DiggingSystem] DEPTH BLOCKED: {toolName} cannot dig at {depthAtPosition:F1}m (max={maxDepth}m)");

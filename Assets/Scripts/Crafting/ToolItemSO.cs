@@ -38,6 +38,7 @@ namespace BeneathTheFloor.Crafting
         Shovel,
         Pickaxe,
         Drill,
-        Hammer
+        Hammer,
+        SonicPulser
     }
 }

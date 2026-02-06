@@ -27,6 +27,7 @@ namespace BeneathTheFloor.Energy
         [SerializeField] private float tool1EnergyCost = 8f;  // Shovel - 8 energy per dig
         [SerializeField] private float tool2EnergyCost = 6f;  // Heavy Spade - 6 energy per dig
         [SerializeField] private float tool3EnergyCost = 4f;  // Pickaxe - 4 energy per dig
+        [SerializeField] private float tool5EnergyCost = 25f; // Sonic Pulser - 25 energy per shot
 
         [Header("Energy Drinks")]
         [SerializeField] private int energyDrinkCount = 0;
@@ -273,6 +274,7 @@ namespace BeneathTheFloor.Energy
                     0 => tool1EnergyCost,  // Shovel - 8 energy
                     1 => tool2EnergyCost,  // Heavy Spade - 6 energy
                     2 => tool3EnergyCost,  // Pickaxe - 4 energy
+                    4 => tool5EnergyCost,  // Sonic Pulser - 25 energy per shot
                     _ => tool1EnergyCost
                 };
             }
@@ -318,6 +320,14 @@ namespace BeneathTheFloor.Energy
                 return true;
             }
             return false;
+        }
+
+        /// <summary>
+        /// Reset the regen cooldown timer (e.g. when Sonic Pulser drains energy during charge).
+        /// </summary>
+        public void ResetRegenCooldown()
+        {
+            timeSinceLastDig = 0f;
         }
 
         /// <summary>

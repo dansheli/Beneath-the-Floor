@@ -17,14 +17,14 @@ namespace BeneathTheFloor.ResourceSystem
         public GameObject nodePrefab;
 
         [Tooltip("Scale multiplier for the node prefab")]
-        [Range(0.1f, 25f)]
+        [Range(0.1f, 100f)]
         public float nodePrefabScale = 1.0f;
 
         [Tooltip("Pickup prefab for this tier (dropped items)")]
         public GameObject pickupPrefab;
 
         [Tooltip("Scale multiplier for the pickup prefab")]
-        [Range(0.1f, 25f)]
+        [Range(0.1f, 100f)]
         public float pickupPrefabScale = 1.0f;
 
         [Tooltip("How many items drop when the node crumbles")]
@@ -492,7 +492,7 @@ namespace BeneathTheFloor.ResourceSystem
         {
             if (resources == null || string.IsNullOrEmpty(resourceId))
                 return null;
-            return resources.Find(r => r.resourceId == resourceId);
+            return resources.Find(r => string.Equals(r.resourceId, resourceId, System.StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>

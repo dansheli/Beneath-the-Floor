@@ -35,6 +35,12 @@ namespace BeneathTheFloor.Tools
         [SerializeField] private GameObject tool4_Tier2;  // Drill_Pike_Tier2
         [SerializeField] private GameObject tool4_Tier3;  // Drill_Pike_Tier3
 
+        [Header("Tool 5: Sonic Pulser")]
+        [SerializeField] private GameObject tool5_Base;   // Sonic_Pulser_Base
+        [SerializeField] private GameObject tool5_Tier1;  // Sonic_Pulser_Tier1
+        [SerializeField] private GameObject tool5_Tier2;  // Sonic_Pulser_Tier2
+        [SerializeField] private GameObject tool5_Tier3;  // Sonic_Pulser_Tier3
+
         [Header("Tool 1 Prefab Paths")]
         [SerializeField] private string tool1_BasePath = "Assets/Art/Tools/Tool1/Base_tier1_tier2_tier3/Base_Shovel.prefab";
         [SerializeField] private string tool1_Tier1Path = "Assets/Art/Tools/Tool1/Base_tier1_tier2_tier3/Tier1_Shovel.prefab";
@@ -58,6 +64,12 @@ namespace BeneathTheFloor.Tools
         [SerializeField] private string tool4_Tier1Path = "Assets/Art/Tools/Drill Pike/Drill_Pike.prefab";
         [SerializeField] private string tool4_Tier2Path = "Assets/Art/Tools/Drill Pike/Drill_Pike.prefab";
         [SerializeField] private string tool4_Tier3Path = "Assets/Art/Tools/Drill Pike/Drill_Pike.prefab";
+
+        [Header("Tool 5 Prefab Paths")]
+        [SerializeField] private string tool5_BasePath = "Assets/Art/Tools/Sonic_Pulser/Sonic_Pulser.prefab";
+        [SerializeField] private string tool5_Tier1Path = "Assets/Art/Tools/Sonic_Pulser/Sonic_Pulser.prefab";
+        [SerializeField] private string tool5_Tier2Path = "Assets/Art/Tools/Sonic_Pulser/Sonic_Pulser.prefab";
+        [SerializeField] private string tool5_Tier3Path = "Assets/Art/Tools/Sonic_Pulser/Sonic_Pulser.prefab";
 
         // Debug input removed for release build
 
@@ -128,7 +140,13 @@ namespace BeneathTheFloor.Tools
             {
                 int toolTierLevel = PlayerPrefs.GetInt("RuntimeUpgrade_tool_tier", 0);
                 // tool_tier level 0=Tool1, 1=Tool2, 2=Tool3; Tool4 is picked up separately
-                savedToolIndex = Mathf.Clamp(toolTierLevel, 0, 3);
+                savedToolIndex = Mathf.Clamp(toolTierLevel, 0, 4);
+            }
+
+            // Check if Sonic Pulser was purchased (separate upgrade, not in tool_tier)
+            if (PlayerPrefs.GetInt("RuntimeUpgrade_sonic_pulser", 0) >= 1)
+            {
+                savedToolIndex = 4; // Tool 5: Sonic Pulser
             }
 
             if (enableDebugLogs) Debug.Log($"[HeldToolController] Start() - PlayerPrefs: tool={savedToolIndex}, tier={savedTier}, equipped={savedToolEquipped}");
@@ -202,6 +220,17 @@ namespace BeneathTheFloor.Tools
             if (tool4_Tier2 == null) tool4_Tier2 = InstantiateToolFromPath(tool4_Tier2Path, mainCam.transform, "Tool4_Tier2", ToolAnimationType.DrillPike);
             if (tool4_Tier3 == null) tool4_Tier3 = InstantiateToolFromPath(tool4_Tier3Path, mainCam.transform, "Tool4_Tier3", ToolAnimationType.DrillPike);
 
+            // Tool 5: Sonic Pulser - find existing or instantiate (SonicPulser animation - reuses DrillPike for now)
+            if (tool5_Base == null) tool5_Base = FindToolUnderCamera(mainCam.transform, "Sonic_Pulser", "Tool5_Base", ToolAnimationType.SonicPulser);
+            if (tool5_Tier1 == null) tool5_Tier1 = FindToolUnderCamera(mainCam.transform, "Sonic_Pulser_Tier1", "Tool5_Tier1", ToolAnimationType.SonicPulser);
+            if (tool5_Tier2 == null) tool5_Tier2 = FindToolUnderCamera(mainCam.transform, "Sonic_Pulser_Tier2", "Tool5_Tier2", ToolAnimationType.SonicPulser);
+            if (tool5_Tier3 == null) tool5_Tier3 = FindToolUnderCamera(mainCam.transform, "Sonic_Pulser_Tier3", "Tool5_Tier3", ToolAnimationType.SonicPulser);
+
+            if (tool5_Base == null) tool5_Base = InstantiateToolFromPath(tool5_BasePath, mainCam.transform, "Tool5_Base", ToolAnimationType.SonicPulser);
+            if (tool5_Tier1 == null) tool5_Tier1 = InstantiateToolFromPath(tool5_Tier1Path, mainCam.transform, "Tool5_Tier1", ToolAnimationType.SonicPulser);
+            if (tool5_Tier2 == null) tool5_Tier2 = InstantiateToolFromPath(tool5_Tier2Path, mainCam.transform, "Tool5_Tier2", ToolAnimationType.SonicPulser);
+            if (tool5_Tier3 == null) tool5_Tier3 = InstantiateToolFromPath(tool5_Tier3Path, mainCam.transform, "Tool5_Tier3", ToolAnimationType.SonicPulser);
+
             // Disable shadows on all tools (first-person items shouldn't cast shadows)
             DisableShadows(tool1_Base);
             DisableShadows(tool1_Tier1);
@@ -219,6 +248,10 @@ namespace BeneathTheFloor.Tools
             DisableShadows(tool4_Tier1);
             DisableShadows(tool4_Tier2);
             DisableShadows(tool4_Tier3);
+            DisableShadows(tool5_Base);
+            DisableShadows(tool5_Tier1);
+            DisableShadows(tool5_Tier2);
+            DisableShadows(tool5_Tier3);
 
             // Ensure correct animation type for ALL tools (even if already assigned in Inspector)
             EnsureToolVisual(tool1_Base, ToolAnimationType.Shovel);
@@ -237,6 +270,10 @@ namespace BeneathTheFloor.Tools
             EnsureToolVisual(tool4_Tier1, ToolAnimationType.DrillPike);
             EnsureToolVisual(tool4_Tier2, ToolAnimationType.DrillPike);
             EnsureToolVisual(tool4_Tier3, ToolAnimationType.DrillPike);
+            EnsureToolVisual(tool5_Base, ToolAnimationType.SonicPulser);
+            EnsureToolVisual(tool5_Tier1, ToolAnimationType.SonicPulser);
+            EnsureToolVisual(tool5_Tier2, ToolAnimationType.SonicPulser);
+            EnsureToolVisual(tool5_Tier3, ToolAnimationType.SonicPulser);
 
             // Setup overlay camera for rendering tools on top
             if (renderToolsOnTop && useOverlayCamera)
@@ -252,6 +289,7 @@ namespace BeneathTheFloor.Tools
                 Debug.Log($"  Tool2: Base={tool2_Base != null}, T1={tool2_Tier1 != null}, T2={tool2_Tier2 != null}, T3={tool2_Tier3 != null}");
                 Debug.Log($"  Tool3: Base={tool3_Base != null}, T1={tool3_Tier1 != null}, T2={tool3_Tier2 != null}, T3={tool3_Tier3 != null}");
                 Debug.Log($"  Tool4: Base={tool4_Base != null}, T1={tool4_Tier1 != null}, T2={tool4_Tier2 != null}, T3={tool4_Tier3 != null}");
+                Debug.Log($"  Tool5: Base={tool5_Base != null}, T1={tool5_Tier1 != null}, T2={tool5_Tier2 != null}, T3={tool5_Tier3 != null}");
             }
         }
 
@@ -457,6 +495,10 @@ namespace BeneathTheFloor.Tools
             SetLayerRecursively(tool4_Tier1, heldToolLayer);
             SetLayerRecursively(tool4_Tier2, heldToolLayer);
             SetLayerRecursively(tool4_Tier3, heldToolLayer);
+            SetLayerRecursively(tool5_Base, heldToolLayer);
+            SetLayerRecursively(tool5_Tier1, heldToolLayer);
+            SetLayerRecursively(tool5_Tier2, heldToolLayer);
+            SetLayerRecursively(tool5_Tier3, heldToolLayer);
 
             // Reset materials to proper opaque rendering (undo any previous material hacks)
             ResetMaterialsToOpaque(tool1_Base);
@@ -475,6 +517,10 @@ namespace BeneathTheFloor.Tools
             ResetMaterialsToOpaque(tool4_Tier1);
             ResetMaterialsToOpaque(tool4_Tier2);
             ResetMaterialsToOpaque(tool4_Tier3);
+            ResetMaterialsToOpaque(tool5_Base);
+            ResetMaterialsToOpaque(tool5_Tier1);
+            ResetMaterialsToOpaque(tool5_Tier2);
+            ResetMaterialsToOpaque(tool5_Tier3);
 
             if (enableDebugLogs)
                 Debug.Log($"[HeldToolController] Overlay camera system set up. Tools on layer {heldToolLayer}");
@@ -645,12 +691,12 @@ namespace BeneathTheFloor.Tools
         }
 
         /// <summary>
-        /// Switch to a different tool (0 = Shovel, 1 = Heavy Spade, 2 = Pickaxe, 3 = Drill Pike).
+        /// Switch to a different tool (0 = Shovel, 1 = Heavy Spade, 2 = Pickaxe, 3 = Drill Pike, 4 = Sonic Pulser).
         /// Resets tier to 1 (base) for the new tool.
         /// </summary>
         public void SetActiveTool(int toolIndex)
         {
-            currentToolIndex = Mathf.Clamp(toolIndex, 0, 3);
+            currentToolIndex = Mathf.Clamp(toolIndex, 0, 4);
             currentTier = 1; // Reset to base tier when switching tools
 
             if (enableDebugLogs) Debug.Log($"[HeldToolController] Switched to Tool {currentToolIndex + 1}, Tier {currentTier}");
@@ -679,7 +725,7 @@ namespace BeneathTheFloor.Tools
         /// </summary>
         public void SetActiveToolAndTier(int toolIndex, int tier)
         {
-            currentToolIndex = Mathf.Clamp(toolIndex, 0, 3);
+            currentToolIndex = Mathf.Clamp(toolIndex, 0, 4);
             currentTier = Mathf.Clamp(tier, 1, 4);
 
             if (enableDebugLogs) Debug.Log($"[HeldToolController] Set to Tool {currentToolIndex + 1}, Tier {currentTier}");
@@ -730,6 +776,12 @@ namespace BeneathTheFloor.Tools
             if (tool4_Tier1 != null) tool4_Tier1.SetActive(false);
             if (tool4_Tier2 != null) tool4_Tier2.SetActive(false);
             if (tool4_Tier3 != null) tool4_Tier3.SetActive(false);
+
+            // Tool 5: Sonic Pulser
+            if (tool5_Base != null) tool5_Base.SetActive(false);
+            if (tool5_Tier1 != null) tool5_Tier1.SetActive(false);
+            if (tool5_Tier2 != null) tool5_Tier2.SetActive(false);
+            if (tool5_Tier3 != null) tool5_Tier3.SetActive(false);
         }
 
         /// <summary>
@@ -844,7 +896,7 @@ namespace BeneathTheFloor.Tools
                     _ => tool3_Base
                 };
             }
-            else // Tool 4: Drill Pike
+            else if (currentToolIndex == 3) // Tool 4: Drill Pike
             {
                 return currentTier switch
                 {
@@ -853,6 +905,17 @@ namespace BeneathTheFloor.Tools
                     3 => tool4_Tier2,
                     4 => tool4_Tier3,
                     _ => tool4_Base
+                };
+            }
+            else // Tool 5: Sonic Pulser
+            {
+                return currentTier switch
+                {
+                    1 => tool5_Base,
+                    2 => tool5_Tier1,
+                    3 => tool5_Tier2,
+                    4 => tool5_Tier3,
+                    _ => tool5_Base
                 };
             }
         }
@@ -888,6 +951,7 @@ namespace BeneathTheFloor.Tools
         public int GetCurrentTier() => currentTier;
         public int GetCurrentToolIndex() => currentToolIndex;
         public float GetDigSpeedModifier() => currentToolData?.digSpeed ?? 1f;
+        public ToolVisual GetCurrentToolVisual() => currentToolVisual;
 
         // ============================================================
         // CHARGED ATTACK METHODS (for Drill Pike)
@@ -938,7 +1002,7 @@ namespace BeneathTheFloor.Tools
         /// </summary>
         public bool SupportsCharging()
         {
-            return currentToolIndex == 3; // Tool 4: Drill Pike
+            return currentToolIndex == 3 || currentToolIndex == 4; // Tool 4: Drill Pike, Tool 5: Sonic Pulser
         }
     }
 
