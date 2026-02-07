@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   toolId: tier3_shovel
   displayName: Steel Shovel
-  digRadius: 0.7
-  digPower: 1.2
-  digDuration: 0.45
+  digRadius: 0.42
+  digPower: 0.7
+  digDuration: 0.50
   inputMode: 0
   energyCostPerDig: 8
   maxDigDepth: 15
   resourceEfficiency: 1.5
-  hardnessRating: 1.5
+  hardnessRating: 1.6
   icon: {fileID: 0}

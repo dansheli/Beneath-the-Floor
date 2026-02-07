@@ -10,16 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 38bb642cf9a06e2469785013dbaaea5d, type: 3}
-  m_Name: DrillPike_Tier3
+  m_Name: Tier1_Pickaxe
   m_EditorClassIdentifier:
-  toolId: drillpike_tier3
-  displayName: Drill Pike +3
-  digRadius: 0.78
-  digPower: 2.50
-  digDuration: 0.18
+  toolId: tier1_pickaxe
+  displayName: Reinforced Pickaxe
+  digRadius: 0.58
+  digPower: 1.35
+  digDuration: 0.32
   inputMode: 0
-  energyCostPerDig: 3
-  maxDigDepth: 50
-  resourceEfficiency: 1.6
-  hardnessRating: 5.5
+  energyCostPerDig: 4
+  maxDigDepth: 30
+  resourceEfficiency: 1.1
+  hardnessRating: 3.1
   icon: {fileID: 0}

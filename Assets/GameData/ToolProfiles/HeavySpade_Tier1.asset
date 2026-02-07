@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   toolId: heavyspade_tier1
   displayName: Reinforced Heavy Spade
-  digRadius: 0.6
-  digPower: 1.3
-  digDuration: 0.5
+  digRadius: 0.48
+  digPower: 0.85
+  digDuration: 0.44
   inputMode: 0
   energyCostPerDig: 6
   maxDigDepth: 22

@@ -84,7 +84,7 @@ namespace BeneathTheFloor.Tools
         private bool isReloading = false;
         private float reloadTimer = 0f;
         private const float CHARGE_RATE = 2f; // Seconds per unit of charge
-        private const float CHARGE_MAX_SECONDS = 9f; // Hard cap - charge stops after this
+        private const float CHARGE_MAX_SECONDS = 5f; // Hard cap - charge stops after this
         private Coroutine reloadCoroutine;
         private GameObject chargeBallObj; // Visible ball growing at barrel during charge
         private bool chargePaused = false; // True when energy is depleted (ball stops growing)
@@ -1067,7 +1067,7 @@ namespace BeneathTheFloor.Tools
 
             // Fire projectile - small visual ball, dig radius = 75% of normal tool dig
             float quickDigRadius = Digging.DiggingSystem.Instance != null ? Digging.DiggingSystem.Instance.DigRadius : 0.5f;
-            quickDigRadius *= Machines.UpgradeStation.ToolRadiusMultiplier * Machines.UpgradeStation.ToolTierMultiplier * 0.75f;
+            quickDigRadius *= Machines.UpgradeStation.ToolRadiusMultiplier * Machines.UpgradeStation.ToolTierMultiplier * 0.5f;
             FireSonicProjectile(0.15f, quickDigRadius, 20f, 3f, sonicPulseColor);
 
             // Flash tip glow
@@ -1408,8 +1408,8 @@ namespace BeneathTheFloor.Tools
             float chargedVisual = 0.01f + 0.12f * Mathf.Sqrt(chargePower);
             float baseDigRadius = Digging.DiggingSystem.Instance != null ? Digging.DiggingSystem.Instance.DigRadius : 0.5f;
             float chargedDigRadius = baseDigRadius * Machines.UpgradeStation.ToolRadiusMultiplier
-                * Machines.UpgradeStation.ToolTierMultiplier * (1f + chargePower * 2f);
-            float chargedSpeed = 22f + Mathf.Min(chargePower, 5f) * 15f; // Speed caps at reasonable value
+                * Machines.UpgradeStation.ToolTierMultiplier * (1f + chargePower * 0.6f);
+            float chargedSpeed = 18f + Mathf.Min(chargePower, 3f) * 8f; // Speed caps at reasonable value
             Color chargedColor = Color.Lerp(sonicPulseColor, sonicChargedPulseColor, Mathf.Clamp01(chargePower));
             FireSonicProjectile(chargedVisual, chargedDigRadius, chargedSpeed, 3f, chargedColor);
 

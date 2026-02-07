@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   toolId: drillpike_tier2
   displayName: Drill Pike +2
-  digRadius: 0.52
-  digPower: 1.00
-  digDuration: 0.28
+  digRadius: 0.72
+  digPower: 2.20
+  digDuration: 0.20
   inputMode: 0
   energyCostPerDig: 3
   maxDigDepth: 50
   resourceEfficiency: 1.4
-  hardnessRating: 4.8
+  hardnessRating: 5
   icon: {fileID: 0}

@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   toolId: tier2_shovel
   displayName: Iron-Tipped Shovel
-  digRadius: 0.6
-  digPower: 1
-  digDuration: 0.5
+  digRadius: 0.38
+  digPower: 0.6
+  digDuration: 0.55
   inputMode: 0
   energyCostPerDig: 8
   maxDigDepth: 15

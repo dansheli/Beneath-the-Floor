@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   toolId: base_shovel
   displayName: Wooden Shovel
-  digRadius: 0.4
-  digPower: 0.6
-  digDuration: 0.6
+  digRadius: 0.30
+  digPower: 0.4
+  digDuration: 0.65
   inputMode: 0
   energyCostPerDig: 8
   maxDigDepth: 15

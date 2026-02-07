@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   toolId: tier2_pickaxe
   displayName: Basic Pickaxe
-  digRadius: 0.35
-  digPower: 0.65
-  digDuration: 0.4
+  digRadius: 0.62
+  digPower: 1.50
+  digDuration: 0.28
   inputMode: 0
   energyCostPerDig: 4
   maxDigDepth: 30
   resourceEfficiency: 1
-  hardnessRating: 2.5
+  hardnessRating: 3.5
   icon: {fileID: 0}

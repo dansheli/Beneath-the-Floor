@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   toolId: heavyspade_tier2
   displayName: Iron Heavy Spade
-  digRadius: 0.7
-  digPower: 1.6
-  digDuration: 0.45
+  digRadius: 0.52
+  digPower: 0.95
+  digDuration: 0.40
   inputMode: 0
   energyCostPerDig: 6
   maxDigDepth: 22
   resourceEfficiency: 1.6
-  hardnessRating: 2.3
+  hardnessRating: 2.2
   icon: {fileID: 0}

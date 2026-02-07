@@ -1523,26 +1523,18 @@ namespace BeneathTheFloor.Machines
         public static float ToolTierMultiplier { get; private set; } = 1.0f;
         public static int CurrentToolTier { get; private set; } = 0;
 
-        // Super Hit Count (for Drill Pike charged attack) - read by both V2 and V3
-        public static int SuperHitCount { get; private set; } = 2; // Base: 2 hits
+        // Super Hit Count (for Drill Pike charged attack) - fixed at 2 hits, no longer upgradeable
+        public static int SuperHitCount => 2;
 
         // First Room Upgrade Station power multiplier (separate from main upgrade station)
         public static float FirstRoomToolPowerMultiplier { get; private set; } = 1.0f;
 
         /// <summary>
-        /// Set the super hit count (for Drill Pike charged attack).
-        /// Called by FirstRoomUpgradeStationUI.
+        /// No-op. Super hit count is now fixed at 2. Kept for backward compatibility.
         /// </summary>
         public static void SetSuperHitCount(int count)
         {
-            SuperHitCount = Mathf.Clamp(count, 1, 10);
-
-            // Apply to V2 if available
-            if (DiggingSystem.Instance != null)
-            {
-                DiggingSystem.Instance.SetSuperHitCount(SuperHitCount);
-            }
-
+            // Fixed at 2 - no longer upgradeable
         }
 
         /// <summary>

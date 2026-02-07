@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   toolId: heavyspade_tier3
   displayName: Steel Heavy Spade
-  digRadius: 0.8
-  digPower: 2
-  digDuration: 0.4
+  digRadius: 0.56
+  digPower: 1.10
+  digDuration: 0.36
   inputMode: 0
   energyCostPerDig: 6
   maxDigDepth: 22

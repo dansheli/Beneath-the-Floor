@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   toolId: drillpike_base
   displayName: Drill Pike
-  digRadius: 0.42
-  digPower: 0.85
-  digDuration: 0.32
+  digRadius: 0.65
+  digPower: 1.80
+  digDuration: 0.24
   inputMode: 0
   energyCostPerDig: 3
   maxDigDepth: 50
   resourceEfficiency: 1.1
-  hardnessRating: 4.2
+  hardnessRating: 4.3
   icon: {fileID: 0}

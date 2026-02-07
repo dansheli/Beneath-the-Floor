@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   toolId: tier1_shovel
   displayName: Reinforced Shovel
-  digRadius: 0.5
-  digPower: 0.8
-  digDuration: 0.55
+  digRadius: 0.34
+  digPower: 0.5
+  digDuration: 0.60
   inputMode: 0
   energyCostPerDig: 8
   maxDigDepth: 15

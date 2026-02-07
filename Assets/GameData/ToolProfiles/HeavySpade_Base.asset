@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   toolId: heavyspade_base
   displayName: Heavy Spade
-  digRadius: 0.5
-  digPower: 1
-  digDuration: 0.55
+  digRadius: 0.44
+  digPower: 0.75
+  digDuration: 0.48
   inputMode: 0
   energyCostPerDig: 6
   maxDigDepth: 22

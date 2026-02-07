@@ -23,10 +23,6 @@ namespace BeneathTheFloor.Machines
         public static int ToolPowerLevel { get; private set; } = 0;
         public const int TOOL_POWER_MAX_LEVEL = 2;
 
-        // Super Hit: Level 0 = base (2 hits), 1 = 3 hits, 2 = 4 hits (max)
-        public static int SuperHitLevel { get; private set; } = 0;
-        public const int SUPER_HIT_MAX_LEVEL = 2;
-
         // Jetpack Efficiency: Level 0 = 15/sec, 1 = 12/sec, 2 = 9/sec, 3 = 5/sec
         public static int JetpackEfficiencyLevel { get; private set; } = 0;
         public const int JETPACK_EFFICIENCY_MAX_LEVEL = 3;
@@ -35,8 +31,6 @@ namespace BeneathTheFloor.Machines
 
         // Power multiplier values per level
         private static readonly float[] toolPowerMultipliers = { 1.0f, 1.5f, 2.0f };
-        // Super hit count per level (base is 2 hits, upgrades add more)
-        private static readonly int[] superHitCounts = { 2, 3, 4 };
 
         // ===== ENERGY UPGRADE TRACKING =====
         // Energy upgrades are tracked by EnergyManager.EnergyUpgradeLevel
@@ -444,40 +438,13 @@ namespace BeneathTheFloor.Machines
             containerRect.offsetMax = new Vector2(-30, -30);
 
             // Check if Sonic Pulser is available or owned
-            bool bothMaxed = (ToolPowerLevel >= TOOL_POWER_MAX_LEVEL && SuperHitLevel >= SUPER_HIT_MAX_LEVEL);
+            bool isToolMaxed = ToolPowerLevel >= TOOL_POWER_MAX_LEVEL;
             bool hasSonicPulser = UpgradeStation.Instance != null && UpgradeStation.Instance.HasSonicPulser();
-            bool showSonicPulser = bothMaxed || hasSonicPulser;
+            bool showSonicPulser = isToolMaxed || hasSonicPulser;
 
             if (showSonicPulser)
             {
-                // 3-section layout: top 33%, middle 33%, bottom 33%
-                // Section 1: TOOL POWER & RADIUS (top third)
-                CreateTripleUpgradeSection(container.transform,
-                    "TOOL POWER & RADIUS",
-                    "Increases dig power and digging area",
-                    ToolPowerLevel,
-                    TOOL_POWER_MAX_LEVEL,
-                    new int[] { 500, 1000 },
-                    "tool_power",
-                    0); // section index 0 = top
-
-                // Section 2: SUPER HIT (middle third)
-                CreateTripleUpgradeSection(container.transform,
-                    "SUPER HIT",
-                    "More hits per charged attack (2 → 3 → 4)",
-                    SuperHitLevel,
-                    SUPER_HIT_MAX_LEVEL,
-                    new int[] { 750, 1500 },
-                    "super_hit",
-                    1); // section index 1 = middle
-
-                // Section 3: SONIC PULSER (bottom third)
-                CreateSonicPulserSection(container.transform, hasSonicPulser);
-            }
-            else
-            {
-                // Normal 2-section layout
-                // Section 1: TOOL POWER & RADIUS (top half)
+                // 2-section layout: Tool Power top half, Sonic Pulser bottom half
                 CreateSimpleUpgradeSection(container.transform,
                     "TOOL POWER & RADIUS",
                     "Increases dig power and digging area",
@@ -487,48 +454,37 @@ namespace BeneathTheFloor.Machines
                     "tool_power",
                     true); // isTopSection
 
-                // Section 2: SUPER HIT (bottom half)
-                CreateSimpleUpgradeSection(container.transform,
-                    "SUPER HIT",
-                    "More hits per charged attack (2 → 3 → 4)",
-                    SuperHitLevel,
-                    SUPER_HIT_MAX_LEVEL,
-                    new int[] { 750, 1500 },
-                    "super_hit",
-                    false); // isBottomSection
+                CreateSonicPulserSection(container.transform, hasSonicPulser);
+            }
+            else
+            {
+                // Single full-area section for Tool Power only
+                CreateFullAreaUpgradeSection(container.transform,
+                    "TOOL POWER & RADIUS",
+                    "Increases dig power and digging area",
+                    ToolPowerLevel,
+                    TOOL_POWER_MAX_LEVEL,
+                    new int[] { 500, 1000 },
+                    "tool_power");
             }
         }
 
         /// <summary>
-        /// Creates an upgrade section in a 3-section layout (each takes ~33% of height).
-        /// sectionIndex: 0 = top, 1 = middle, 2 = bottom
+        /// Creates a single upgrade section that fills the entire content area.
         /// </summary>
-        private void CreateTripleUpgradeSection(Transform parent, string title, string desc, int currentLevel, int maxLevel, int[] costs, string upgradeId, int sectionIndex)
+        private void CreateFullAreaUpgradeSection(Transform parent, string title, string desc, int currentLevel, int maxLevel, int[] costs, string upgradeId)
         {
             GameObject section = new GameObject($"Section_{upgradeId}");
             section.transform.SetParent(parent, false);
 
             RectTransform sectionRect = section.AddComponent<RectTransform>();
-            switch (sectionIndex)
-            {
-                case 0: // top third
-                    sectionRect.anchorMin = new Vector2(0, 0.68f);
-                    sectionRect.anchorMax = new Vector2(1, 1);
-                    break;
-                case 1: // middle third
-                    sectionRect.anchorMin = new Vector2(0, 0.35f);
-                    sectionRect.anchorMax = new Vector2(1, 0.66f);
-                    break;
-                default: // bottom third
-                    sectionRect.anchorMin = new Vector2(0, 0);
-                    sectionRect.anchorMax = new Vector2(1, 0.33f);
-                    break;
-            }
+            sectionRect.anchorMin = Vector2.zero;
+            sectionRect.anchorMax = Vector2.one;
             sectionRect.offsetMin = Vector2.zero;
             sectionRect.offsetMax = Vector2.zero;
 
-            Image sectionBg = section.AddComponent<Image>();
-            sectionBg.color = sectionBgColor;
+            Image sectionBgImg = section.AddComponent<Image>();
+            sectionBgImg.color = sectionBgColor;
 
             // === TITLE ===
             GameObject titleObj = new GameObject("Title");
@@ -538,11 +494,11 @@ namespace BeneathTheFloor.Machines
             titleRect.anchorMin = new Vector2(0, 0.7f);
             titleRect.anchorMax = new Vector2(1, 1);
             titleRect.offsetMin = new Vector2(25, 0);
-            titleRect.offsetMax = new Vector2(-25, -10);
+            titleRect.offsetMax = new Vector2(-25, -15);
 
             TextMeshProUGUI titleText = titleObj.AddComponent<TextMeshProUGUI>();
             titleText.text = title;
-            titleText.fontSize = 20;
+            titleText.fontSize = 26;
             titleText.fontStyle = FontStyles.Bold;
             titleText.color = textWhite;
             titleText.alignment = TextAlignmentOptions.Left;
@@ -552,14 +508,14 @@ namespace BeneathTheFloor.Machines
             descObj.transform.SetParent(section.transform, false);
 
             RectTransform descRect = descObj.AddComponent<RectTransform>();
-            descRect.anchorMin = new Vector2(0, 0.45f);
+            descRect.anchorMin = new Vector2(0, 0.5f);
             descRect.anchorMax = new Vector2(1, 0.7f);
             descRect.offsetMin = new Vector2(25, 0);
             descRect.offsetMax = new Vector2(-25, 0);
 
             TextMeshProUGUI descText = descObj.AddComponent<TextMeshProUGUI>();
             descText.text = desc;
-            descText.fontSize = 13;
+            descText.fontSize = 16;
             descText.color = textCyan;
             descText.alignment = TextAlignmentOptions.Left;
 
@@ -568,13 +524,13 @@ namespace BeneathTheFloor.Machines
             levelRow.transform.SetParent(section.transform, false);
 
             RectTransform levelRowRect = levelRow.AddComponent<RectTransform>();
-            levelRowRect.anchorMin = new Vector2(0, 0);
-            levelRowRect.anchorMax = new Vector2(1, 0.40f);
-            levelRowRect.offsetMin = new Vector2(25, 10);
+            levelRowRect.anchorMin = new Vector2(0, 0.15f);
+            levelRowRect.anchorMax = new Vector2(1, 0.45f);
+            levelRowRect.offsetMin = new Vector2(25, 0);
             levelRowRect.offsetMax = new Vector2(-25, 0);
 
             HorizontalLayoutGroup hlg = levelRow.AddComponent<HorizontalLayoutGroup>();
-            hlg.spacing = 10;
+            hlg.spacing = 12;
             hlg.childControlWidth = false;
             hlg.childControlHeight = true;
             hlg.childForceExpandWidth = false;
@@ -590,8 +546,8 @@ namespace BeneathTheFloor.Machines
                 box.transform.SetParent(levelRow.transform, false);
 
                 LayoutElement boxLe = box.AddComponent<LayoutElement>();
-                boxLe.minWidth = 65;
-                boxLe.preferredWidth = 65;
+                boxLe.minWidth = 90;
+                boxLe.preferredWidth = 90;
 
                 Image boxBg = box.AddComponent<Image>();
                 if (isCompleted)
@@ -619,7 +575,7 @@ namespace BeneathTheFloor.Machines
 
                 TextMeshProUGUI tmp = boxText.AddComponent<TextMeshProUGUI>();
                 tmp.text = (i == 0) ? "BASE" : $"LVL {i}";
-                tmp.fontSize = 14;
+                tmp.fontSize = 17;
                 tmp.fontStyle = FontStyles.Bold;
                 tmp.color = isCompleted ? textWhite : (isNext ? textCyan : textGray);
                 tmp.alignment = TextAlignmentOptions.Center;
@@ -631,36 +587,77 @@ namespace BeneathTheFloor.Machines
             LayoutElement spacerLe = spacer.AddComponent<LayoutElement>();
             spacerLe.flexibleWidth = 1;
 
-            // MAXED box (always maxed since we only show triple layout when both are maxed)
-            GameObject maxBox = new GameObject("Maxed");
-            maxBox.transform.SetParent(levelRow.transform, false);
+            // Button or MAXED
+            if (currentLevel >= maxLevel)
+            {
+                GameObject maxBox = new GameObject("Maxed");
+                maxBox.transform.SetParent(levelRow.transform, false);
 
-            LayoutElement maxLe = maxBox.AddComponent<LayoutElement>();
-            maxLe.minWidth = 100;
-            maxLe.preferredWidth = 100;
+                LayoutElement maxLe = maxBox.AddComponent<LayoutElement>();
+                maxLe.minWidth = 130;
+                maxLe.preferredWidth = 130;
 
-            Image maxBg = maxBox.AddComponent<Image>();
-            maxBg.color = new Color(0.2f, 0.4f, 0.25f);
+                Image maxBg = maxBox.AddComponent<Image>();
+                maxBg.color = new Color(0.2f, 0.4f, 0.25f);
 
-            GameObject maxText = new GameObject("Text");
-            maxText.transform.SetParent(maxBox.transform, false);
+                GameObject maxText = new GameObject("Text");
+                maxText.transform.SetParent(maxBox.transform, false);
 
-            RectTransform maxTextRect = maxText.AddComponent<RectTransform>();
-            maxTextRect.anchorMin = Vector2.zero;
-            maxTextRect.anchorMax = Vector2.one;
-            maxTextRect.offsetMin = Vector2.zero;
-            maxTextRect.offsetMax = Vector2.zero;
+                RectTransform maxTextRect = maxText.AddComponent<RectTransform>();
+                maxTextRect.anchorMin = Vector2.zero;
+                maxTextRect.anchorMax = Vector2.one;
+                maxTextRect.offsetMin = Vector2.zero;
+                maxTextRect.offsetMax = Vector2.zero;
 
-            TextMeshProUGUI maxTmp = maxText.AddComponent<TextMeshProUGUI>();
-            maxTmp.text = "MAXED";
-            maxTmp.fontSize = 15;
-            maxTmp.fontStyle = FontStyles.Bold;
-            maxTmp.color = textWhite;
-            maxTmp.alignment = TextAlignmentOptions.Center;
+                TextMeshProUGUI maxTmp = maxText.AddComponent<TextMeshProUGUI>();
+                maxTmp.text = "MAXED";
+                maxTmp.fontSize = 18;
+                maxTmp.fontStyle = FontStyles.Bold;
+                maxTmp.color = textWhite;
+                maxTmp.alignment = TextAlignmentOptions.Center;
+            }
+            else
+            {
+                int cost = costs[currentLevel];
+
+                GameObject btn = new GameObject("UpgradeButton");
+                btn.transform.SetParent(levelRow.transform, false);
+
+                LayoutElement btnLe = btn.AddComponent<LayoutElement>();
+                btnLe.minWidth = 130;
+                btnLe.preferredWidth = 130;
+
+                Image btnBg = btn.AddComponent<Image>();
+                btnBg.color = buttonCyan;
+
+                Button button = btn.AddComponent<Button>();
+                button.targetGraphic = btnBg;
+
+                string capturedId = upgradeId;
+                int capturedCost = cost;
+                button.onClick.AddListener(() => TryPurchaseUpgrade(capturedId, capturedCost));
+
+                GameObject btnText = new GameObject("Text");
+                btnText.transform.SetParent(btn.transform, false);
+
+                RectTransform btnTextRect = btnText.AddComponent<RectTransform>();
+                btnTextRect.anchorMin = Vector2.zero;
+                btnTextRect.anchorMax = Vector2.one;
+                btnTextRect.offsetMin = Vector2.zero;
+                btnTextRect.offsetMax = Vector2.zero;
+
+                TextMeshProUGUI btnTmp = btnText.AddComponent<TextMeshProUGUI>();
+                btnTmp.text = $"${cost}";
+                btnTmp.fontSize = 20;
+                btnTmp.fontStyle = FontStyles.Bold;
+                btnTmp.color = new Color(1f, 0.9f, 0.3f);
+                btnTmp.alignment = TextAlignmentOptions.Center;
+                btnTmp.raycastTarget = false;
+            }
         }
 
         /// <summary>
-        /// Creates the Sonic Pulser purchase/owned section in the bottom third.
+        /// Creates the Sonic Pulser purchase/owned section in the bottom half.
         /// </summary>
         private void CreateSonicPulserSection(Transform parent, bool isOwned)
         {
@@ -669,7 +666,7 @@ namespace BeneathTheFloor.Machines
 
             RectTransform sectionRect = section.AddComponent<RectTransform>();
             sectionRect.anchorMin = new Vector2(0, 0);
-            sectionRect.anchorMax = new Vector2(1, 0.33f);
+            sectionRect.anchorMax = new Vector2(1, 0.48f);
             sectionRect.offsetMin = Vector2.zero;
             sectionRect.offsetMax = Vector2.zero;
 
@@ -1731,14 +1728,6 @@ namespace BeneathTheFloor.Machines
                         Debug.Log($"[Upgrade] Tool Power upgraded to level {ToolPowerLevel}! Multiplier: {toolPowerMultipliers[ToolPowerLevel]}x");
                     }
                     break;
-                case "super_hit":
-                    if (SuperHitLevel < SUPER_HIT_MAX_LEVEL)
-                    {
-                        SuperHitLevel++;
-                        ApplySuperHitUpgrade();
-                        Debug.Log($"[Upgrade] Super Hit upgraded to level {SuperHitLevel}! Hits per charge: {superHitCounts[SuperHitLevel]}");
-                    }
-                    break;
                 // Energy upgrades are now handled via TryPurchaseEnergyUpgrade() directly
                 // No need for separate max_energy/energy_regen cases
                 case "jetpack_efficiency":
@@ -1792,27 +1781,6 @@ namespace BeneathTheFloor.Machines
             UpgradeStation.SetFirstRoomToolPowerMultiplier(newMultiplier);
 
             Debug.Log($"[FirstRoomUpgradeStationUI] Applied dig power multiplier: {newMultiplier}x");
-        }
-
-        /// <summary>
-        /// Apply the super hit upgrade via UpgradeStation (works with both V2 and V3).
-        /// </summary>
-        private void ApplySuperHitUpgrade()
-        {
-            int hits = superHitCounts[SuperHitLevel];
-
-            // Use UpgradeStation to apply the super hit count - it handles both V2 and V3
-            UpgradeStation.SetSuperHitCount(hits);
-
-            Debug.Log($"[FirstRoomUpgradeStationUI] Applied super hit count: {hits} hits");
-        }
-
-        /// <summary>
-        /// Get the current super hit count based on upgrade level.
-        /// </summary>
-        public static int GetSuperHitCount()
-        {
-            return superHitCounts[SuperHitLevel];
         }
 
         /// <summary>

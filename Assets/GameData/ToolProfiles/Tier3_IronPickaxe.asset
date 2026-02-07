@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   toolId: tier3_iron_pickaxe
   displayName: Iron Pickaxe
-  digRadius: 0.40
-  digPower: 0.80
-  digDuration: 0.35
+  digRadius: 0.66
+  digPower: 1.70
+  digDuration: 0.25
   inputMode: 0
   energyCostPerDig: 4
   maxDigDepth: 30
