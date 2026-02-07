@@ -85,6 +85,11 @@ namespace BeneathTheFloor.Digging
             // FORCE disable debug logs (scene-serialized value may be true)
             enableDebugLogs = false;
 
+            // === VOXEL RESOLUTION UPGRADE: match ChunkManager 0.35→0.2 ===
+            // Recalculate voxel-count parameters to preserve world-space distances.
+            surfaceGradientThickness = 4f;  // 4 × 0.2m = 0.8m (was 2 × 0.35 = 0.7m)
+            bedrockThicknessVoxels = 4;     // 4 × 0.2m = 0.8m (was 2 × 0.35 = 0.7m)
+
             // Find ChunkManager
             if (chunkManager == null)
                 chunkManager = GetComponent<ChunkManager>();

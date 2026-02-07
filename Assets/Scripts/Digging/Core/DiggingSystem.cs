@@ -761,9 +761,9 @@ namespace BeneathTheFloor.Digging
             }
 
             // Apply upgrade multipliers and charge bonus
-            float tierMult = UpgradeStation.ToolTierMultiplier;
-            radiusMultiplier *= UpgradeStation.ToolRadiusMultiplier * tierMult * (1f + chargePower * 0.5f); // Slight radius boost
-            strengthMultiplier *= UpgradeStation.ToolPowerMultiplier * tierMult * chargeBonus; // Full charge bonus to power
+            // NOTE: ToolRadiusMultiplier/ToolPowerMultiplier already include tier (set in UpgradeStation.ApplyToolPowerUpgrade)
+            radiusMultiplier *= UpgradeStation.ToolRadiusMultiplier * (1f + chargePower * 0.5f); // Slight radius boost
+            strengthMultiplier *= UpgradeStation.ToolPowerMultiplier * chargeBonus; // Full charge bonus to power
 
             float effectiveRadius = digRadius * radiusMultiplier;
             float effectiveStrength = digStrength * strengthMultiplier;
@@ -941,9 +941,9 @@ namespace BeneathTheFloor.Digging
                 return;
             }
 
-            // Check cooldown (apply speed upgrade multiplier + tier multiplier)
+            // Check cooldown (ToolSpeedMultiplier already includes tier)
             float timeSinceLastDig = Time.time - _lastDigTime;
-            float effectiveDigsPerSecond = digsPerSecond * UpgradeStation.ToolSpeedMultiplier * UpgradeStation.ToolTierMultiplier;
+            float effectiveDigsPerSecond = digsPerSecond * UpgradeStation.ToolSpeedMultiplier;
             float digCooldown = 1f / effectiveDigsPerSecond;
 
             if (timeSinceLastDig < digCooldown)
@@ -1077,10 +1077,9 @@ namespace BeneathTheFloor.Digging
             }
 
             // Apply upgrade station multipliers (stacks with tool multipliers)
-            // Tier multiplier applies to all stats as a global bonus
-            float tierMult = UpgradeStation.ToolTierMultiplier;
-            radiusMultiplier *= UpgradeStation.ToolRadiusMultiplier * tierMult;
-            strengthMultiplier *= UpgradeStation.ToolPowerMultiplier * tierMult;
+            // NOTE: ToolRadiusMultiplier/ToolPowerMultiplier already include tier
+            radiusMultiplier *= UpgradeStation.ToolRadiusMultiplier;
+            strengthMultiplier *= UpgradeStation.ToolPowerMultiplier;
 
             // Create dig operation with tool modifiers
             float effectiveRadius;
@@ -1398,7 +1397,7 @@ namespace BeneathTheFloor.Digging
         /// <summary>
         /// Current dig power. Legacy property - returns effective dig strength with multipliers.
         /// </summary>
-        public float CurrentDigPower => digStrength * Machines.UpgradeStation.ToolPowerMultiplier * Machines.UpgradeStation.ToolTierMultiplier;
+        public float CurrentDigPower => digStrength * Machines.UpgradeStation.ToolPowerMultiplier;
 
         /// <summary>
         /// Current max dig depth. Legacy property - returns max depth based on current tool.
@@ -1432,12 +1431,12 @@ namespace BeneathTheFloor.Digging
         /// <summary>
         /// Current calculated duration. Legacy property - returns dig cooldown time.
         /// </summary>
-        public float CurrentCalculatedDuration => 1f / (digsPerSecond * Machines.UpgradeStation.ToolSpeedMultiplier * Machines.UpgradeStation.ToolTierMultiplier);
+        public float CurrentCalculatedDuration => 1f / (digsPerSecond * Machines.UpgradeStation.ToolSpeedMultiplier);
 
         /// <summary>
         /// Current speed factor. Legacy property - returns combined speed multiplier.
         /// </summary>
-        public float CurrentSpeedFactor => 1f / (Machines.UpgradeStation.ToolSpeedMultiplier * Machines.UpgradeStation.ToolTierMultiplier);
+        public float CurrentSpeedFactor => 1f / Machines.UpgradeStation.ToolSpeedMultiplier;
 
         /// <summary>
         /// Dig speed multiplier. Legacy property - returns UpgradeStation value.
@@ -1447,7 +1446,7 @@ namespace BeneathTheFloor.Digging
         /// <summary>
         /// Current effective cooldown. Legacy property - returns dig interval.
         /// </summary>
-        public float CurrentEffectiveCooldown => 1f / (digsPerSecond * Machines.UpgradeStation.ToolSpeedMultiplier * Machines.UpgradeStation.ToolTierMultiplier);
+        public float CurrentEffectiveCooldown => 1f / (digsPerSecond * Machines.UpgradeStation.ToolSpeedMultiplier);
 
         /// <summary>
         /// Base dig duration. Legacy property - returns base dig interval.
@@ -1517,16 +1516,16 @@ namespace BeneathTheFloor.Digging
                 ? $"Hit: {_lastHitPoint:F2}"
                 : "No hit";
 
-            // Calculate effective values with upgrades
-            float effSpeed = digsPerSecond * UpgradeStation.ToolSpeedMultiplier * UpgradeStation.ToolTierMultiplier;
-            float effPower = digStrength * UpgradeStation.ToolPowerMultiplier * UpgradeStation.ToolTierMultiplier;
-            float effRadius = digRadius * UpgradeStation.ToolRadiusMultiplier * UpgradeStation.ToolTierMultiplier;
+            // Calculate effective values with upgrades (tier already baked into multipliers)
+            float effSpeed = digsPerSecond * UpgradeStation.ToolSpeedMultiplier;
+            float effPower = digStrength * UpgradeStation.ToolPowerMultiplier;
+            float effRadius = digRadius * UpgradeStation.ToolRadiusMultiplier;
 
             return $"DiggingSystem: ACTIVE\n" +
                    $"Digging: {_isDigging}, {hitInfo}\n" +
                    $"Base: r={digRadius:F2}, str={digStrength:F2}, rate={digsPerSecond:F1}/s\n" +
                    $"Effective: r={effRadius:F2}, str={effPower:F2}, rate={effSpeed:F1}/s\n" +
-                   $"Upgrades: Spd={UpgradeStation.ToolSpeedMultiplier:F2}x Pow={UpgradeStation.ToolPowerMultiplier:F2}x Rad={UpgradeStation.ToolRadiusMultiplier:F2}x Tier={UpgradeStation.ToolTierMultiplier:F2}x";
+                   $"Upgrades: Spd={UpgradeStation.ToolSpeedMultiplier:F2}x Pow={UpgradeStation.ToolPowerMultiplier:F2}x Rad={UpgradeStation.ToolRadiusMultiplier:F2}x";
         }
 
         private void OnDrawGizmosSelected()

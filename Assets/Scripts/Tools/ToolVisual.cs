@@ -241,7 +241,7 @@ namespace BeneathTheFloor.Tools
             }
 
             // Update animation speed from current dig speed multiplier (speed * tier)
-            float currentSpeed = UpgradeStation.ToolSpeedMultiplier * UpgradeStation.ToolTierMultiplier;
+            float currentSpeed = UpgradeStation.ToolSpeedMultiplier; // already includes tier
             if (currentSpeed >= 0.5f)
             {
                 animationSpeedMultiplier = currentSpeed;
@@ -1070,10 +1070,11 @@ namespace BeneathTheFloor.Tools
             Vector3 startPos = initialLocalPosition;
             Quaternion startRot = initialLocalRotation;
 
-            // Fire projectile - small visual ball, dig radius = 75% of normal tool dig
+            // Fire projectile - tight beam, high impact (balanced for 0.2m voxels)
+            // ToolRadiusMultiplier already includes tier
             float quickDigRadius = Digging.DiggingSystem.Instance != null ? Digging.DiggingSystem.Instance.DigRadius : 0.5f;
-            quickDigRadius *= Machines.UpgradeStation.ToolRadiusMultiplier * Machines.UpgradeStation.ToolTierMultiplier * 0.5f;
-            FireSonicProjectile(0.15f, quickDigRadius, 20f, 3f, sonicPulseColor);
+            quickDigRadius *= Machines.UpgradeStation.ToolRadiusMultiplier * 0.4f;
+            FireSonicProjectile(0.12f, quickDigRadius, 20f, 3f, sonicPulseColor);
 
             // Flash tip glow
             var glow = GetSonicTipGlow();
@@ -1412,8 +1413,9 @@ namespace BeneathTheFloor.Tools
             // Fire charged projectile - visual matches the charge ball size (same formula as UpdateChargeBall)
             float chargedVisual = 0.01f + 0.12f * Mathf.Sqrt(chargePower);
             float baseDigRadius = Digging.DiggingSystem.Instance != null ? Digging.DiggingSystem.Instance.DigRadius : 0.5f;
+            // ToolRadiusMultiplier already includes tier
             float chargedDigRadius = baseDigRadius * Machines.UpgradeStation.ToolRadiusMultiplier
-                * Machines.UpgradeStation.ToolTierMultiplier * (1f + chargePower * 0.6f);
+                * (1f + chargePower * 0.6f);
             float chargedSpeed = 18f + Mathf.Min(chargePower, 3f) * 8f; // Speed caps at reasonable value
             Color chargedColor = Color.Lerp(sonicPulseColor, sonicChargedPulseColor, Mathf.Clamp01(chargePower));
             FireSonicProjectile(chargedVisual, chargedDigRadius, chargedSpeed, 3f, chargedColor);

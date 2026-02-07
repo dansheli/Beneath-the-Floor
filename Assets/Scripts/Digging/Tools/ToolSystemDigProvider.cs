@@ -19,20 +19,14 @@ namespace BeneathTheFloor.Digging
     [DefaultExecutionOrder(100)] // Run after HeldToolController and DiggingSystem
     public class ToolSystemDigProvider : MonoBehaviour, IDigToolProvider
     {
-        [Header("Tool Tier Settings")]
-        [Tooltip("Dig radius multiplier for Tier 1 tools.")]
-        [SerializeField] private float tier1RadiusMultiplier = 1.0f;
-        [SerializeField] private float tier1StrengthMultiplier = 1.0f;
+        [Header("Tool Hardness Settings")]
+        [Tooltip("Max terrain hardness for Shovel/Heavy Spade tier.")]
         [SerializeField] private float tier1MaxHardness = 1.0f;
 
-        [Tooltip("Dig radius multiplier for Tier 2 tools.")]
-        [SerializeField] private float tier2RadiusMultiplier = 1.2f;
-        [SerializeField] private float tier2StrengthMultiplier = 1.3f;
+        [Tooltip("Max terrain hardness for Pickaxe tier.")]
         [SerializeField] private float tier2MaxHardness = 1.5f;
 
-        [Tooltip("Dig radius multiplier for Tier 3 tools.")]
-        [SerializeField] private float tier3RadiusMultiplier = 1.5f;
-        [SerializeField] private float tier3StrengthMultiplier = 1.6f;
+        [Tooltip("Max terrain hardness for advanced tools tier.")]
         [SerializeField] private float tier3MaxHardness = 2.0f;
 
         [Header("References")]
@@ -141,46 +135,63 @@ namespace BeneathTheFloor.Digging
         }
 
         /// <summary>
-        /// Get current tool info based on equipped tier.
+        /// Get current tool info based on equipped tool.
+        /// Balanced for 0.2m voxels: tight radius + high strength = visible bite marks.
+        /// Base digRadius=0.5m, base digStrength=0.8 (in DiggingSystem).
         /// </summary>
         public DigToolInfo? GetCurrentDigTool()
         {
             if (!HasValidDigTool())
                 return null;
 
-            int tier = heldToolController.GetCurrentTier();
+            int toolIndex = heldToolController.GetCurrentToolIndex();
             ToolData toolData = heldToolController.GetCurrentTool();
 
-            // Get tier-specific multipliers
+            // Per-tool dig profile: small radius + high strength for natural-looking terrain
+            // At 0.2m voxels, effective radius in voxels ≈ (base 0.5 × mult) / 0.2
             float radiusMultiplier, strengthMultiplier, maxHardness;
             string toolId, displayName;
 
-            switch (tier)
+            switch (toolIndex)
             {
-                case 1:
-                    radiusMultiplier = tier1RadiusMultiplier;
-                    strengthMultiplier = tier1StrengthMultiplier;
+                case 0: // Shovel - tight scoop, moderate power
+                    radiusMultiplier = 0.6f;    // 0.30m = 1.5 voxels
+                    strengthMultiplier = 2.5f;   // effective 2.0
                     maxHardness = tier1MaxHardness;
-                    toolId = "shovel_tier1";
-                    displayName = toolData?.toolName ?? "Wooden Shovel";
+                    toolId = "shovel";
+                    displayName = toolData?.toolName ?? "Shovel";
                     break;
-                case 2:
-                    radiusMultiplier = tier2RadiusMultiplier;
-                    strengthMultiplier = tier2StrengthMultiplier;
+                case 1: // Heavy Spade - slightly wider, stronger
+                    radiusMultiplier = 0.7f;    // 0.35m = 1.75 voxels
+                    strengthMultiplier = 3.0f;   // effective 2.4
                     maxHardness = tier2MaxHardness;
-                    toolId = "hoe_tier2";
-                    displayName = toolData?.toolName ?? "Iron Hoe";
+                    toolId = "heavy_spade";
+                    displayName = toolData?.toolName ?? "Heavy Spade";
                     break;
-                case 3:
-                    radiusMultiplier = tier3RadiusMultiplier;
-                    strengthMultiplier = tier3StrengthMultiplier;
+                case 2: // Pickaxe - focused strike, high power
+                    radiusMultiplier = 0.75f;   // 0.375m = ~1.9 voxels
+                    strengthMultiplier = 3.5f;   // effective 2.8
                     maxHardness = tier3MaxHardness;
-                    toolId = "pickaxe_tier3";
-                    displayName = toolData?.toolName ?? "Steel Pickaxe";
+                    toolId = "pickaxe";
+                    displayName = toolData?.toolName ?? "Pickaxe";
+                    break;
+                case 3: // Drill Pike - piercing thrust, deep and narrow
+                    radiusMultiplier = 0.65f;   // 0.325m = ~1.6 voxels (narrow bore)
+                    strengthMultiplier = 4.5f;   // effective 3.6 (deepest per hit)
+                    maxHardness = 3.0f;
+                    toolId = "drill_pike";
+                    displayName = toolData?.toolName ?? "Drill Pike";
+                    break;
+                case 4: // Sonic Pulser - normal dig (quick shot handled separately in ToolVisual)
+                    radiusMultiplier = 0.8f;    // 0.40m = 2.0 voxels
+                    strengthMultiplier = 4.0f;   // effective 3.2
+                    maxHardness = 5.0f;
+                    toolId = "sonic_pulser";
+                    displayName = toolData?.toolName ?? "Sonic Pulser";
                     break;
                 default:
-                    radiusMultiplier = 1.0f;
-                    strengthMultiplier = 1.0f;
+                    radiusMultiplier = 0.6f;
+                    strengthMultiplier = 2.5f;
                     maxHardness = 1.0f;
                     toolId = "unknown";
                     displayName = "Unknown Tool";

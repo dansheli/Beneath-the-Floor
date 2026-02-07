@@ -678,7 +678,7 @@ namespace BeneathTheFloor.Tools
                 currentToolVisual = activeTool.GetComponent<ToolVisual>();
 
                 // Set animation speed based on actual dig speed multiplier from upgrade station (speed * tier)
-                float digSpeed = UpgradeStation.ToolSpeedMultiplier * UpgradeStation.ToolTierMultiplier;
+                float digSpeed = UpgradeStation.ToolSpeedMultiplier; // already includes tier
                 if (digSpeed < 0.5f) digSpeed = currentToolData?.digSpeed ?? 1f; // Fallback
                 currentToolVisual?.SetAnimationSpeed(digSpeed);
 
@@ -713,7 +713,7 @@ namespace BeneathTheFloor.Tools
                     currentToolVisual = activeTool.GetComponent<ToolVisual>();
 
                     // Set animation speed based on actual dig speed multiplier (speed * tier)
-                    float digSpeed = UpgradeStation.ToolSpeedMultiplier * UpgradeStation.ToolTierMultiplier;
+                    float digSpeed = UpgradeStation.ToolSpeedMultiplier; // already includes tier
                     if (digSpeed < 0.5f) digSpeed = currentToolData?.digSpeed ?? 1f;
                     currentToolVisual?.SetAnimationSpeed(digSpeed);
                 }
@@ -741,7 +741,7 @@ namespace BeneathTheFloor.Tools
                     currentToolVisual = activeTool.GetComponent<ToolVisual>();
 
                     // Set animation speed based on actual dig speed multiplier (speed * tier)
-                    float digSpeed = UpgradeStation.ToolSpeedMultiplier * UpgradeStation.ToolTierMultiplier;
+                    float digSpeed = UpgradeStation.ToolSpeedMultiplier; // already includes tier
                     if (digSpeed < 0.5f) digSpeed = currentToolData?.digSpeed ?? 1f;
                     currentToolVisual?.SetAnimationSpeed(digSpeed);
                 }

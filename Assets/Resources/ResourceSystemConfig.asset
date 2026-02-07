@@ -342,7 +342,7 @@ MonoBehaviour:
     - tierName: 1
       nodePrefab: {fileID: 8454900145487014224, guid: a83c28bba91851542ab9c16b6c9ba3b7,
         type: 3}
-      nodePrefabScale: 5
+      nodePrefabScale: 3
       pickupPrefab: {fileID: 3159392432209984012, guid: dc0e371e99f538543ab0c2683c4a8b7d,
         type: 3}
       pickupPrefabScale: 1
@@ -353,7 +353,7 @@ MonoBehaviour:
     - tierName: 2
       nodePrefab: {fileID: 8454900145487014224, guid: a83c28bba91851542ab9c16b6c9ba3b7,
         type: 3}
-      nodePrefabScale: 7
+      nodePrefabScale: 5
       pickupPrefab: {fileID: 3159392432209984012, guid: dc0e371e99f538543ab0c2683c4a8b7d,
         type: 3}
       pickupPrefabScale: 1
@@ -364,7 +364,7 @@ MonoBehaviour:
     - tierName: 3
       nodePrefab: {fileID: 8454900145487014224, guid: a83c28bba91851542ab9c16b6c9ba3b7,
         type: 3}
-      nodePrefabScale: 10
+      nodePrefabScale: 7
       pickupPrefab: {fileID: 3159392432209984012, guid: dc0e371e99f538543ab0c2683c4a8b7d,
         type: 3}
       pickupPrefabScale: 1
@@ -375,7 +375,7 @@ MonoBehaviour:
     - tierName: 4
       nodePrefab: {fileID: 8454900145487014224, guid: a83c28bba91851542ab9c16b6c9ba3b7,
         type: 3}
-      nodePrefabScale: 15
+      nodePrefabScale: 9
       pickupPrefab: {fileID: 3159392432209984012, guid: dc0e371e99f538543ab0c2683c4a8b7d,
         type: 3}
       pickupPrefabScale: 1

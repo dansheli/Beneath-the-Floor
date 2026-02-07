@@ -211,6 +211,33 @@ namespace BeneathTheFloor.Digging
             // Initialize
             _chunks = new Dictionary<ChunkCoord, VoxelChunk>(256);
 
+            // === VOXEL RESOLUTION UPGRADE: 0.35m → 0.2m ===
+            // Override serialized values to maintain same world coverage at higher resolution.
+            // Smaller voxels = finer dig detail, more natural-looking terrain.
+            if (voxelSize > 0.21f)
+            {
+                float oldChunkWorld = ChunkMesher.CHUNK_SIZE * voxelSize;
+                voxelSize = 0.2f;
+                float newChunkWorld = ChunkMesher.CHUNK_SIZE * voxelSize;
+
+                // Recalculate chunk bounds to cover same world area
+                // Old: (-4,4) × 5.6m = 50.4m → New: (-8,7) × 3.2m = 51.2m
+                // Old: (-22,0) × 5.6m = 128.8m → New: (-40,0) × 3.2m = 131.2m
+                minChunkCoord = new Vector3Int(-8, -40, -8);
+                maxChunkCoord = new Vector3Int(7, 0, 7);
+
+                // Recalculate voxel-count parameters to preserve world-space distances
+                surfaceGradientThickness = 7f;  // 7 × 0.2m = 1.4m (was 4 × 0.35 = 1.4m)
+                bedrockThickness = 4;            // 4 × 0.2m = 0.8m (was 2 × 0.35 = 0.7m)
+                boundaryThickness = 4;           // 4 × 0.2m = 0.8m (was 2 × 0.35 = 0.7m)
+
+                // Expand unload distance to maintain ~35m range
+                chunkUnloadDistance = 11;         // 11 × 3.2m = 35.2m (was 6 × 5.6 = 33.6m)
+
+                Debug.Log($"[ChunkManager] Voxel resolution upgraded: {oldChunkWorld:F1}m → {newChunkWorld:F1}m chunks. " +
+                          $"Bounds: X/Z({minChunkCoord.x}..{maxChunkCoord.x}), Y({minChunkCoord.y}..{maxChunkCoord.y})");
+            }
+
             // RUNTIME OVERRIDE: Force immediate collider updates for responsive digging
             // Scene-serialized delay might cause second dig to miss
             if (colliderUpdateDelay > 0.01f)
