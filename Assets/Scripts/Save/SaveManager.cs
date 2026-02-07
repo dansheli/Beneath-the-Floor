@@ -1253,8 +1253,9 @@ namespace BeneathTheFloor.Save
                     if (tierLevel > 0)
                         toolIndex = Mathf.Clamp(tierLevel, 0, 4);
                 }
-                // Check if Sonic Pulser was purchased
-                if (UpgradeStation.Instance != null && UpgradeStation.Instance.HasSonicPulser())
+                // Check if Sonic Pulser was purchased (use PlayerPrefs directly -
+                // RuntimeUpgrades may not be loaded yet when ApplyToolData runs before ApplyUpgradeData)
+                if (PlayerPrefs.GetInt("RuntimeUpgrade_sonic_pulser", 0) >= 1)
                     toolIndex = 4;
                 HeldToolController.Instance.SetActiveToolAndTier(toolIndex, currentSave.currentToolTier);
                 if (currentSave.hasToolEquipped)
@@ -1394,8 +1395,9 @@ namespace BeneathTheFloor.Save
                     if (tierLevel > 0)
                         toolIndex = Mathf.Clamp(tierLevel, 0, 4);
                 }
-                // Check if Sonic Pulser was purchased
-                if (UpgradeStation.Instance != null && UpgradeStation.Instance.HasSonicPulser())
+                // Check if Sonic Pulser was purchased (use PlayerPrefs directly -
+                // RuntimeUpgrades may not be loaded yet when ApplyToolData runs before ApplyUpgradeData)
+                if (PlayerPrefs.GetInt("RuntimeUpgrade_sonic_pulser", 0) >= 1)
                     toolIndex = 4;
 
                 if (debugLogs)

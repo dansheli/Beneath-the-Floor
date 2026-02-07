@@ -163,21 +163,26 @@ namespace BeneathTheFloor.Tools
 
         private void OnEnable()
         {
-            initialLocalPosition = transform.localPosition;
-            initialLocalRotation = transform.localRotation;
+            // Restore to the pose captured in Awake() - don't re-capture
+            // (if deactivated mid-animation, transform may be in a tilted state)
+            transform.localPosition = initialLocalPosition;
+            transform.localRotation = initialLocalRotation;
             idleTimer = 0f;
             isAnimating = false;
+            isCharging = false;
+            isReloading = false;
+            chargePaused = false;
 
-            // Re-store child transforms on enable
+            // Restore child transforms captured in Awake()
             if (toolHead != null)
             {
-                headInitialLocalPos = toolHead.localPosition;
-                headInitialLocalRot = toolHead.localRotation;
+                toolHead.localPosition = headInitialLocalPos;
+                toolHead.localRotation = headInitialLocalRot;
             }
             if (toolHandle != null)
             {
-                handleInitialLocalPos = toolHandle.localPosition;
-                handleInitialLocalRot = toolHandle.localRotation;
+                toolHandle.localPosition = handleInitialLocalPos;
+                toolHandle.localRotation = handleInitialLocalRot;
             }
         }
 
