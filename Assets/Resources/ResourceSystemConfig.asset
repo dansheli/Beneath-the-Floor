@@ -468,6 +468,7 @@ MonoBehaviour:
   tier3BaseChance: 8
   tier4BaseChance: 2
   baseDustPerMass: 10
+  minDustPerDig: 1
   dustSellValue: 1
   depthDustMultipliers:
   - 1
