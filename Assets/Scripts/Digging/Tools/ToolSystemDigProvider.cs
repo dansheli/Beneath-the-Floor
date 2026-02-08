@@ -156,42 +156,42 @@ namespace BeneathTheFloor.Digging
             {
                 case 0: // Shovel - tight scoop, moderate power
                     radiusMultiplier = 0.6f;    // 0.30m = 1.5 voxels
-                    strengthMultiplier = 2.5f;   // effective 2.0
+                    strengthMultiplier = 3.0f;   // effective 2.4
                     maxHardness = tier1MaxHardness;
                     toolId = "shovel";
                     displayName = toolData?.toolName ?? "Shovel";
                     break;
                 case 1: // Heavy Spade - slightly wider, stronger
                     radiusMultiplier = 0.7f;    // 0.35m = 1.75 voxels
-                    strengthMultiplier = 3.0f;   // effective 2.4
+                    strengthMultiplier = 3.6f;   // effective 2.88
                     maxHardness = tier2MaxHardness;
                     toolId = "heavy_spade";
                     displayName = toolData?.toolName ?? "Heavy Spade";
                     break;
                 case 2: // Pickaxe - focused strike, high power
                     radiusMultiplier = 0.75f;   // 0.375m = ~1.9 voxels
-                    strengthMultiplier = 3.5f;   // effective 2.8
+                    strengthMultiplier = 4.2f;   // effective 3.36
                     maxHardness = tier3MaxHardness;
                     toolId = "pickaxe";
                     displayName = toolData?.toolName ?? "Pickaxe";
                     break;
                 case 3: // Drill Pike - piercing thrust, deep and narrow
                     radiusMultiplier = 0.65f;   // 0.325m = ~1.6 voxels (narrow bore)
-                    strengthMultiplier = 4.5f;   // effective 3.6 (deepest per hit)
+                    strengthMultiplier = 5.4f;   // effective 4.32 (deepest per hit)
                     maxHardness = 3.0f;
                     toolId = "drill_pike";
                     displayName = toolData?.toolName ?? "Drill Pike";
                     break;
                 case 4: // Sonic Pulser - normal dig (quick shot handled separately in ToolVisual)
                     radiusMultiplier = 0.8f;    // 0.40m = 2.0 voxels
-                    strengthMultiplier = 4.0f;   // effective 3.2
+                    strengthMultiplier = 4.8f;   // effective 3.84
                     maxHardness = 5.0f;
                     toolId = "sonic_pulser";
                     displayName = toolData?.toolName ?? "Sonic Pulser";
                     break;
                 default:
                     radiusMultiplier = 0.6f;
-                    strengthMultiplier = 2.5f;
+                    strengthMultiplier = 3.0f;
                     maxHardness = 1.0f;
                     toolId = "unknown";
                     displayName = "Unknown Tool";

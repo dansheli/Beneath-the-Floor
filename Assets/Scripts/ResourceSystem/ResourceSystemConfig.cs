@@ -177,6 +177,10 @@ namespace BeneathTheFloor.ResourceSystem
         [Range(1f, 100f)]
         public float baseDustPerMass = 10f;
 
+        [Tooltip("Minimum dust gained per successful dig (floor). Prevents weak tools from feeling unrewarding.")]
+        [Range(0f, 5f)]
+        public float minDustPerDig = 1.0f;
+
         [Tooltip("Credits gained per dust unit when selling.")]
         [Range(0.1f, 10f)]
         public float dustSellValue = 1f;

@@ -149,6 +149,10 @@ namespace BeneathTheFloor.ResourceSystem
             // Calculate dust gained: removedMass × baseDustPerMass × depthMultiplier
             float dustGained = removedMass * config.baseDustPerMass * depthMultiplier;
 
+            // Enforce minimum dust per dig so weak tools don't feel unrewarding
+            if (dustGained < config.minDustPerDig)
+                dustGained = config.minDustPerDig;
+
             if (dustGained > 0f)
             {
                 AddDust(dustGained);
