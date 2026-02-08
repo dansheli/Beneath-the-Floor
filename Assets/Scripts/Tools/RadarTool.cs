@@ -1,12 +1,23 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using BeneathTheFloor.ResourceSystem;
+using BeneathTheFloor.Missions;
 
 namespace BeneathTheFloor.Tools
 {
+    public enum RadarMode
+    {
+        TreasureChests = 1,
+        CoreShard = 2
+        // 3, 4 reserved for future modes
+    }
+
     /// <summary>
     /// Manages the radar/EMF tool held in the player's left hand.
     /// Used to detect hidden nodes and guide the player to objectives.
+    /// Supports multiple modes (Tab to cycle) for different target types.
     /// </summary>
     public class RadarTool : MonoBehaviour
     {
@@ -16,6 +27,11 @@ namespace BeneathTheFloor.Tools
         /// Fired when radar has been activated for the required duration.
         /// </summary>
         public static event Action OnRadarActivated;
+
+        /// <summary>
+        /// Fired when the radar mode changes. Passes the new mode.
+        /// </summary>
+        public static event Action<RadarMode> OnRadarModeChanged;
 
         [Header("Prefab")]
         [SerializeField] private string prefabPath = "Assets/lathiel/EMF/Prefabs/EMF_Modern_T2.prefab";
@@ -28,6 +44,9 @@ namespace BeneathTheFloor.Tools
         [Header("Settings")]
         [SerializeField] private KeyCode holdKey = KeyCode.Q;
         [SerializeField] private bool startVisible = false;
+
+        [Header("Mode Switching")]
+        [SerializeField] private KeyCode modeSwitchKey = KeyCode.Tab;
 
         [Header("Activation Tracking")]
         [SerializeField] private float requiredActivationDuration = 1f;
@@ -54,16 +73,6 @@ namespace BeneathTheFloor.Tools
         [Tooltip("Show debug info in console")]
         [SerializeField] private bool debugNeedle = false;
 
-        [Header("Screen Light (Visible in Dark)")]
-        [Tooltip("Add a subtle light to simulate a backlit screen - makes radar visible in dark areas")]
-        [SerializeField] private bool enableScreenLight = true;
-        [Tooltip("Color of the screen backlight")]
-        [SerializeField] private Color screenLightColor = new Color(0.9f, 0.95f, 1f, 1f); // Slight blue-white
-        [Tooltip("Intensity of the screen light")]
-        [SerializeField] private float screenLightIntensity = 0.25f;
-        [Tooltip("Range of the screen light (keep small so it only lights the radar)")]
-        [SerializeField] private float screenLightRange = 0.8f;
-
         [Header("Hologram (3D Target Indicator)")]
         [Tooltip("3D prefab to show as hologram (e.g., treasure chest)")]
         [SerializeField] private GameObject hologramPrefab;
@@ -79,10 +88,24 @@ namespace BeneathTheFloor.Tools
         [SerializeField] private float hologramBobAmplitude = 0.003f;
         [Tooltip("Vertical bob speed")]
         [SerializeField] private float hologramBobSpeed = 2f;
-        [Tooltip("Hologram color/tint")]
-        [SerializeField] private Color hologramColor = new Color(0.4f, 1f, 1f, 0.85f); // Bright cyan hologram
-        [Tooltip("Hologram emission intensity")]
-        [SerializeField] private float hologramEmission = 3f;
+        [Header("Core Shard Hologram")]
+        [SerializeField] private GameObject coreShardHologramPrefab;
+        [Tooltip("Position offset for the Core Shard hologram (local space, relative to radar)")]
+        [SerializeField] private Vector3 coreShardHologramOffset = new Vector3(0f, 0.15f, 0.05f);
+        [Tooltip("Scale multiplier for the Core Shard hologram")]
+        [SerializeField] private float coreShardHologramScale = 0.08f;
+
+        [Header("Detection - Treasure Chests (Mode 1)")]
+        [SerializeField] private float chestPerfectAimAngle = 10f;
+        [SerializeField] private float chestMaxDetectionAngle = 90f;
+        [SerializeField] private float chestMinDetectionDistance = 0.3f;
+        [SerializeField] private float chestMaxDetectionDistance = 15f;
+
+        [Header("Detection - Core Shard (Mode 2)")]
+        [SerializeField] private float shardPerfectAimAngle = 30f;
+        [SerializeField] private float shardMaxDetectionAngle = 120f;
+        [SerializeField] private float shardMinDetectionDistance = 2f;
+        [SerializeField] private float shardMaxDetectionDistance = 80f;
 
         [Header("Always On Top Rendering")]
         [Tooltip("Render radar and hologram on top of everything (not hidden by walls)")]
@@ -100,14 +123,16 @@ namespace BeneathTheFloor.Tools
         private float activationTimer = 0f;
         private bool hasTriggeredActivation = false;
 
+        // Mode state
+        private RadarMode currentMode = RadarMode.TreasureChests;
+        private List<RadarMode> unlockedModes = new List<RadarMode> { RadarMode.TreasureChests };
+        private bool autoShowActive = false; // True during unlock animation auto-show
+
         // Needle state
         private Transform needleTransform;
         private float currentNeedleValue = 0f; // 0-1 normalized value
         private float targetNeedleValue = 0f;
         private Vector3 needleStartEuler;
-
-        // Screen light
-        private Light screenLight;
 
         // Hologram
         private GameObject hologramInstance;
@@ -115,6 +140,10 @@ namespace BeneathTheFloor.Tools
         private Transform hologramModelTransform; // The actual 3D model that spins
         private float hologramSpinAngle = 0f;
         private Vector3 hologramBasePosition;
+
+        // Per-mode hologram config (prefab + color for Mode 1 are the default hologramPrefab/hologramColor)
+        public int CurrentMode => (int)currentMode;
+        public bool HasMultipleModes => unlockedModes.Count > 1;
 
         private void Awake()
         {
@@ -156,6 +185,13 @@ namespace BeneathTheFloor.Tools
                 isVisible = startVisible && isUnlocked;
                 radarInstance.SetActive(isVisible);
 
+                // Put radar on HeldTool layer so it's lit by the held-tool light (not scene lights)
+                int heldToolLayer = LayerMask.NameToLayer("HeldTool");
+                if (heldToolLayer >= 0)
+                {
+                    SetLayerRecursively(radarInstance, heldToolLayer);
+                }
+
                 // Find needle if radar exists but needle not found yet
                 if (needleTransform == null)
                 {
@@ -170,10 +206,12 @@ namespace BeneathTheFloor.Tools
 
                 // Setup 3D hologram (treasure chest indicator)
                 SetupHologram();
+            }
 
-                // Apply "always on top" rendering
-                if (renderOnTop)
-                    ApplyAlwaysOnTopRendering();
+            // Subscribe to mission events for Mode 2 unlock
+            if (MissionManager.Instance != null)
+            {
+                MissionManager.Instance.OnMissionStarted += OnMissionStarted;
             }
         }
 
@@ -193,8 +231,18 @@ namespace BeneathTheFloor.Tools
             }
             else if (Input.GetKeyUp(holdKey))
             {
-                HideRadar();
-                activationTimer = 0f; // Reset timer when released
+                // Don't hide if auto-show animation is playing
+                if (!autoShowActive)
+                {
+                    HideRadar();
+                    activationTimer = 0f; // Reset timer when released
+                }
+            }
+
+            // Mode switching with Tab (only when radar is visible and multiple modes unlocked)
+            if (Input.GetKeyDown(modeSwitchKey) && isVisible && unlockedModes.Count > 1)
+            {
+                CycleMode();
             }
 
             // Track activation duration while visible
@@ -211,6 +259,219 @@ namespace BeneathTheFloor.Tools
 
             // Note: Needle is now controlled by RadarPointer component with useAimAccuracyMode enabled
             // The detection logic has been moved there to keep audio and wobble features
+        }
+
+        private void OnMissionStarted(MissionData mission)
+        {
+            if (mission.missionId == "secret_rooms") // Mission 9
+            {
+                UnlockMode(RadarMode.CoreShard);
+                StartCoroutine(PlayModeUnlockAnimation());
+            }
+        }
+
+        /// <summary>
+        /// Unlock a new radar mode.
+        /// </summary>
+        public void UnlockMode(RadarMode mode)
+        {
+            if (!unlockedModes.Contains(mode))
+            {
+                unlockedModes.Add(mode);
+                Debug.Log($"[RadarTool] Mode unlocked: {mode}");
+            }
+        }
+
+        /// <summary>
+        /// Cycle to the next unlocked mode.
+        /// </summary>
+        private void CycleMode()
+        {
+            if (unlockedModes.Count <= 1) return;
+
+            int currentIndex = unlockedModes.IndexOf(currentMode);
+            int nextIndex = (currentIndex + 1) % unlockedModes.Count;
+            SetMode(unlockedModes[nextIndex]);
+        }
+
+        /// <summary>
+        /// Switch to a specific radar mode.
+        /// </summary>
+        public void SetMode(RadarMode mode)
+        {
+            if (currentMode == mode) return;
+
+            currentMode = mode;
+            Debug.Log($"[RadarTool] Mode switched to: {mode}");
+
+            // Swap hologram based on mode
+            switch (mode)
+            {
+                case RadarMode.TreasureChests:
+                    SwapHologram(hologramPrefab, hologramOffset, hologramScale);
+                    break;
+                case RadarMode.CoreShard:
+                    SwapHologram(coreShardHologramPrefab, coreShardHologramOffset, coreShardHologramScale);
+                    break;
+            }
+
+            // Update detection parameters on the RadarPointer
+            ApplyDetectionParametersForMode(mode);
+
+            // Refresh which target the radar points to
+            RadarTarget.RefreshActiveTarget();
+
+            // Fire event
+            OnRadarModeChanged?.Invoke(mode);
+        }
+
+        private void ApplyDetectionParametersForMode(RadarMode mode)
+        {
+            if (radarInstance == null) return;
+            var pointer = radarInstance.GetComponent<RadarPointer>();
+            if (pointer == null) return;
+
+            switch (mode)
+            {
+                case RadarMode.TreasureChests:
+                    pointer.SetDetectionParameters(chestPerfectAimAngle, chestMaxDetectionAngle, chestMinDetectionDistance, chestMaxDetectionDistance);
+                    break;
+                case RadarMode.CoreShard:
+                    pointer.SetDetectionParameters(shardPerfectAimAngle, shardMaxDetectionAngle, shardMinDetectionDistance, shardMaxDetectionDistance);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Swap the hologram model, keeping its original prefab materials.
+        /// Only adjusts for on-top rendering and shadow disabling.
+        /// </summary>
+        private void SwapHologram(GameObject prefab, Vector3 offset, float newScale)
+        {
+            if (hologramTransform == null) return;
+
+            // Update container position and scale for this mode
+            hologramTransform.localPosition = offset;
+            hologramTransform.localScale = Vector3.one * newScale;
+            hologramBasePosition = offset;
+
+            // Destroy existing model child
+            if (hologramModelTransform != null)
+            {
+                Destroy(hologramModelTransform.gameObject);
+                hologramModelTransform = null;
+            }
+
+            // Instantiate new model
+            if (prefab != null)
+            {
+                GameObject model = Instantiate(prefab, hologramTransform);
+                model.name = "HologramModel";
+                model.transform.localPosition = Vector3.zero;
+                model.transform.localRotation = Quaternion.identity;
+                model.transform.localScale = Vector3.one;
+                hologramModelTransform = model.transform;
+
+                // Keep original materials - just fix shadows and on-top rendering
+                PrepareHologramRenderers(model);
+            }
+            else
+            {
+                // Fallback shape (no prefab assigned)
+                CreateFallbackHologramShape();
+            }
+        }
+
+        /// <summary>
+        /// Smooth auto-reveal animation when a new mode is unlocked.
+        /// Radar appears, hologram glows up brightly, then fades to normal.
+        /// Radar stays in hand after animation.
+        /// </summary>
+        private IEnumerator PlayModeUnlockAnimation()
+        {
+            autoShowActive = true;
+
+            // Force-show radar
+            ShowRadar();
+
+            // Switch to the new mode
+            SetMode(RadarMode.CoreShard);
+
+            // Show "New Object" centered popup via MissionUI
+            var missionUI = FindObjectOfType<MissionUI>();
+            if (missionUI != null)
+            {
+                missionUI.ShowCenteredPopup("New Object", 4f);
+            }
+
+            // Smooth emission animation (0 = no glow, peak = bright flash)
+            float normalEmission = 0f;
+            float peakEmission = 8f;
+
+            // Phase 1: Smooth ramp up (1s) using SmoothStep
+            float rampUpDuration = 1.0f;
+            float elapsed = 0f;
+            while (elapsed < rampUpDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.SmoothStep(0f, 1f, elapsed / rampUpDuration);
+                float em = Mathf.Lerp(normalEmission, peakEmission, t);
+                SetHologramEmission(em);
+                yield return null;
+            }
+
+            // Phase 2: Hold at bright peak (2s)
+            SetHologramEmission(peakEmission);
+            yield return new WaitForSeconds(2.0f);
+
+            // Phase 3: Smooth fade back to normal (1.5s)
+            float rampDownDuration = 1.5f;
+            elapsed = 0f;
+            while (elapsed < rampDownDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.SmoothStep(0f, 1f, elapsed / rampDownDuration);
+                float em = Mathf.Lerp(peakEmission, normalEmission, t);
+                SetHologramEmission(em);
+                yield return null;
+            }
+            SetHologramEmission(normalEmission);
+
+            autoShowActive = false;
+
+            // Radar stays visible - player can press Q to hide when they want
+        }
+
+        /// <summary>
+        /// Set the emission intensity on the current hologram model's existing materials.
+        /// Uses white emission so the original colors are preserved but glow brighter.
+        /// Intensity 0 = no extra emission, >0 = additive glow.
+        /// </summary>
+        private void SetHologramEmission(float intensity)
+        {
+            if (hologramModelTransform == null) return;
+
+            foreach (var renderer in hologramModelTransform.GetComponentsInChildren<Renderer>())
+            {
+                foreach (var mat in renderer.materials)
+                {
+                    if (mat.HasProperty("_EmissionColor"))
+                    {
+                        if (intensity > 0f)
+                        {
+                            mat.EnableKeyword("_EMISSION");
+                            // Use white emission so original colors glow evenly
+                            Color emissionColor = Color.white * intensity;
+                            mat.SetColor("_EmissionColor", emissionColor);
+                        }
+                        else
+                        {
+                            mat.DisableKeyword("_EMISSION");
+                            mat.SetColor("_EmissionColor", Color.black);
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -269,7 +530,7 @@ namespace BeneathTheFloor.Tools
             if (debugNeedle && Time.frameCount % 30 == 0) // Every 30 frames
             {
                 int level = Mathf.RoundToInt(1 + currentNeedleValue * 4);
-                Debug.Log($"[RadarTool] Angle: {angle:F1}°, Value: {currentNeedleValue:F2}, Level: {level}");
+                Debug.Log($"[RadarTool] Angle: {angle:F1}, Value: {currentNeedleValue:F2}, Level: {level}");
             }
         }
 
@@ -301,6 +562,11 @@ namespace BeneathTheFloor.Tools
         {
             if (Instance == this)
                 Instance = null;
+
+            if (MissionManager.Instance != null)
+            {
+                MissionManager.Instance.OnMissionStarted -= OnMissionStarted;
+            }
         }
 
         /// <summary>
@@ -373,6 +639,13 @@ namespace BeneathTheFloor.Tools
                     renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 }
 
+                // Put radar on HeldTool layer so the headlamp doesn't illuminate it
+                int heldToolLayer = LayerMask.NameToLayer("HeldTool");
+                if (heldToolLayer >= 0)
+                {
+                    SetLayerRecursively(radarInstance, heldToolLayer);
+                }
+
                 // Find and setup needle
                 FindNeedle();
 
@@ -381,10 +654,6 @@ namespace BeneathTheFloor.Tools
 
                 // Setup 3D hologram (treasure chest indicator)
                 SetupHologram();
-
-                // Apply "always on top" rendering
-                if (renderOnTop)
-                    ApplyAlwaysOnTopRendering();
             }
         }
 
@@ -396,30 +665,18 @@ namespace BeneathTheFloor.Tools
         {
             if (radarInstance == null) return;
 
-            // FIRST: Reset any emission on materials (clean up from previous versions)
-            // This fixes the "white/bright" appearance issue
+            // Destroy ALL Light components on the radar (prefab baked-in + any previously created screen lights)
+            foreach (var light in radarInstance.GetComponentsInChildren<Light>(true))
+            {
+                // If light is on a child object (like "RadarScreenLight"), destroy the whole child
+                if (light.gameObject != radarInstance)
+                    Destroy(light.gameObject);
+                else
+                    Destroy(light); // Just remove the component if on root
+            }
+
+            // Reset any emission on materials (EMF lamp materials have white emission)
             ResetMaterialEmission();
-
-            // Only add screen light if enabled
-            if (!enableScreenLight) return;
-
-            // Create a subtle point light in front of the radar screen
-            // This simulates a backlit LCD display
-            GameObject lightObj = new GameObject("RadarScreenLight");
-            lightObj.transform.SetParent(radarInstance.transform);
-
-            // Position the light slightly in front of the screen area
-            // Adjust based on radar model orientation
-            lightObj.transform.localPosition = new Vector3(0f, 0.05f, 0.15f);
-            lightObj.transform.localRotation = Quaternion.identity;
-
-            screenLight = lightObj.AddComponent<Light>();
-            screenLight.type = LightType.Point;
-            screenLight.color = screenLightColor;
-            screenLight.intensity = screenLightIntensity;
-            screenLight.range = screenLightRange;
-            screenLight.shadows = LightShadows.None; // No shadows for performance
-
         }
 
         /// <summary>
@@ -445,17 +702,15 @@ namespace BeneathTheFloor.Tools
             Transform existingHologram = radarInstance.transform.Find("RadarHologram");
             if (existingHologram != null)
             {
-                Debug.Log("[RadarTool] SetupHologram: Found existing RadarHologram in hierarchy");
                 hologramInstance = existingHologram.gameObject;
                 hologramTransform = existingHologram;
                 hologramBasePosition = hologramTransform.localPosition;
-                // Find the model child for spinning
                 Transform modelChild = existingHologram.Find("HologramModel");
                 if (modelChild != null)
                     hologramModelTransform = modelChild;
                 else if (existingHologram.childCount > 0)
-                    hologramModelTransform = existingHologram.GetChild(0); // Use first child as model
-                ApplyHologramMaterial(hologramInstance);
+                    hologramModelTransform = existingHologram.GetChild(0);
+                PrepareHologramRenderers(hologramInstance);
                 return;
             }
 
@@ -470,9 +725,7 @@ namespace BeneathTheFloor.Tools
             hologramTransform.localScale = Vector3.one * hologramScale;
             hologramBasePosition = hologramOffset;
 
-            Debug.Log($"[RadarTool] SetupHologram: Created container at localPos={hologramOffset}, scale={hologramScale}");
-
-            // Instantiate the 3D prefab if assigned
+            // Instantiate the 3D prefab if assigned - keep its original materials
             if (hologramPrefab != null)
             {
                 GameObject model = Instantiate(hologramPrefab, hologramTransform);
@@ -480,16 +733,13 @@ namespace BeneathTheFloor.Tools
                 model.transform.localPosition = Vector3.zero;
                 model.transform.localRotation = Quaternion.identity;
                 model.transform.localScale = Vector3.one;
-                hologramModelTransform = model.transform; // Store reference to spin this
+                hologramModelTransform = model.transform;
 
-                Debug.Log($"[RadarTool] SetupHologram: Instantiated prefab '{hologramPrefab.name}'");
-
-                // Apply hologram material effect
-                ApplyHologramMaterial(model);
+                // Keep original materials - just fix shadows and on-top rendering
+                PrepareHologramRenderers(model);
             }
             else
             {
-                Debug.Log("[RadarTool] SetupHologram: No prefab assigned, creating fallback shape");
                 // Create fallback primitive if no prefab assigned
                 CreateFallbackHologramShape();
             }
@@ -527,73 +777,100 @@ namespace BeneathTheFloor.Tools
             lid.transform.localScale = new Vector3(1.05f, 0.3f, 0.75f);
             DestroyImmediate(lid.GetComponent<Collider>());
 
-            ApplyHologramMaterial(body);
-            ApplyHologramMaterial(lid);
+            ApplyFallbackHologramMaterial(body);
+            ApplyFallbackHologramMaterial(lid);
         }
 
         /// <summary>
-        /// Apply hologram material effect to all renderers in the object.
-        /// Creates a glowing, transparent, sci-fi hologram look.
+        /// Prepare hologram renderers: disable shadows and apply on-top rendering.
+        /// Keeps the prefab's original materials intact.
         /// </summary>
-        private void ApplyHologramMaterial(GameObject obj)
+        private void PrepareHologramRenderers(GameObject obj)
         {
             if (obj == null) return;
 
+            // Destroy CrystalGlow components so they don't create lights or pulse emission
+            foreach (var glow in obj.GetComponentsInChildren<Lighting.CrystalGlow>(true))
+            {
+                Destroy(glow);
+            }
+
+            // Destroy any Light components (e.g. CrystalLight created by the prefab)
+            foreach (var light in obj.GetComponentsInChildren<Light>(true))
+            {
+                if (light.gameObject != obj)
+                    Destroy(light.gameObject); // Destroy the whole "CrystalLight" child
+                else
+                    Destroy(light);
+            }
+
             foreach (var renderer in obj.GetComponentsInChildren<Renderer>())
             {
-                // Find a suitable shader - try URP first, then Standard
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                renderer.receiveShadows = false;
+
+                // .materials creates per-instance clones (original shared materials stay untouched)
+                Material[] mats = renderer.materials;
+                foreach (var mat in mats)
+                {
+                    // Kill emission so glowing prefabs (like Core Shard) don't act as flashlights on the radar
+                    mat.DisableKeyword("_EMISSION");
+                    if (mat.HasProperty("_EmissionColor"))
+                        mat.SetColor("_EmissionColor", Color.black);
+                    if (mat.HasProperty("_EmissiveColor"))
+                        mat.SetColor("_EmissiveColor", Color.black);
+
+                    if (renderOnTop)
+                    {
+                        if (mat.HasProperty("_ZTest"))
+                            mat.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
+                        mat.renderQueue = onTopRenderQueue;
+                    }
+                }
+                renderer.materials = mats;
+            }
+        }
+
+        /// <summary>
+        /// Apply a simple hologram tint material to fallback primitive shapes only.
+        /// </summary>
+        private void ApplyFallbackHologramMaterial(GameObject obj)
+        {
+            if (obj == null) return;
+
+            Color color = new Color(0.4f, 1f, 1f, 0.85f); // Cyan fallback
+
+            foreach (var renderer in obj.GetComponentsInChildren<Renderer>())
+            {
                 Shader shader = Shader.Find("Universal Render Pipeline/Lit");
                 if (shader == null)
                     shader = Shader.Find("Standard");
-                if (shader == null)
-                {
-                    Debug.LogWarning("[RadarTool] Could not find URP/Lit or Standard shader for hologram!");
-                    continue;
-                }
+                if (shader == null) continue;
 
-                // Create hologram material
                 Material holoMat = new Material(shader);
-
-                // Set to transparent
-                holoMat.SetFloat("_Surface", 1); // Transparent
-                holoMat.SetFloat("_Blend", 0); // Alpha blend
+                holoMat.SetFloat("_Surface", 1);
+                holoMat.SetFloat("_Blend", 0);
                 holoMat.SetFloat("_AlphaClip", 0);
                 holoMat.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
                 holoMat.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
                 holoMat.SetFloat("_ZWrite", 0);
                 holoMat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+                holoMat.SetColor("_BaseColor", color);
                 holoMat.renderQueue = 3000;
 
-                // Base color with transparency
-                holoMat.SetColor("_BaseColor", hologramColor);
-
-                // Emission for glow effect
-                holoMat.EnableKeyword("_EMISSION");
-                Color emissionColor = new Color(
-                    hologramColor.r * hologramEmission,
-                    hologramColor.g * hologramEmission,
-                    hologramColor.b * hologramEmission
-                );
-                holoMat.SetColor("_EmissionColor", emissionColor);
-
-                // Apply "always on top" if enabled
                 if (renderOnTop)
                 {
                     holoMat.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
                     holoMat.renderQueue = onTopRenderQueue;
                 }
 
-                // Disable shadows
                 renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 renderer.receiveShadows = false;
 
-                // Apply material to all slots
                 Material[] mats = new Material[renderer.materials.Length];
                 for (int i = 0; i < mats.Length; i++)
                     mats[i] = holoMat;
                 renderer.materials = mats;
-
-                Debug.Log($"[RadarTool] Applied hologram material to {renderer.gameObject.name}");
             }
         }
 
@@ -639,29 +916,6 @@ namespace BeneathTheFloor.Tools
         }
 
         /// <summary>
-        /// Apply "always on top" rendering to the radar and all its children.
-        /// This ensures the radar is never hidden by walls or terrain.
-        /// </summary>
-        private void ApplyAlwaysOnTopRendering()
-        {
-            if (radarInstance == null) return;
-
-            foreach (var renderer in radarInstance.GetComponentsInChildren<Renderer>())
-            {
-                foreach (var mat in renderer.materials)
-                {
-                    // Set ZTest to Always (renders on top of everything)
-                    if (mat.HasProperty("_ZTest"))
-                    {
-                        mat.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
-                    }
-
-                    // Increase render queue to render after other objects
-                    mat.renderQueue = onTopRenderQueue;
-                }
-            }
-        }
-
         /// <summary>
         /// Reset any emission on radar materials to fix white/bright appearance.
         /// </summary>
@@ -671,31 +925,27 @@ namespace BeneathTheFloor.Tools
 
             foreach (var renderer in radarInstance.GetComponentsInChildren<Renderer>())
             {
-                foreach (var mat in renderer.materials)
+                Material[] mats = renderer.materials;
+                foreach (var mat in mats)
                 {
-                    // Disable emission keyword
                     mat.DisableKeyword("_EMISSION");
-
-                    // Reset emission colors to black (no emission)
                     if (mat.HasProperty("_EmissionColor"))
-                    {
                         mat.SetColor("_EmissionColor", Color.black);
-                    }
                     if (mat.HasProperty("_EmissiveColor"))
-                    {
                         mat.SetColor("_EmissiveColor", Color.black);
-                    }
-
-                    // Reset render queue to default
-                    mat.renderQueue = -1; // -1 = use shader's default
-
-                    // Reset ZTest if it was modified
+                    mat.renderQueue = -1;
                     if (mat.HasProperty("_ZTest"))
-                    {
-                        mat.SetFloat("_ZTest", 4f); // 4 = LessEqual (default)
-                    }
+                        mat.SetFloat("_ZTest", 4f);
                 }
+                renderer.materials = mats;
             }
+        }
+
+        private static void SetLayerRecursively(GameObject obj, int layer)
+        {
+            obj.layer = layer;
+            foreach (Transform child in obj.transform)
+                SetLayerRecursively(child.gameObject, layer);
         }
 
         /// <summary>
@@ -838,19 +1088,29 @@ namespace BeneathTheFloor.Tools
                     hologramInstance = null;
                     hologramTransform = null;
                     SetupHologram();
-                    if (renderOnTop)
-                        ApplyAlwaysOnTopRendering();
                 }
             }
         }
 
         /// <summary>
-        /// Refresh the "always on top" rendering (call after making material changes).
+        /// Refresh the "always on top" rendering on the hologram only.
         /// </summary>
         public void RefreshOnTopRendering()
         {
-            if (renderOnTop)
-                ApplyAlwaysOnTopRendering();
+            if (renderOnTop && hologramInstance != null)
+            {
+                foreach (var renderer in hologramInstance.GetComponentsInChildren<Renderer>())
+                {
+                    Material[] mats = renderer.materials;
+                    foreach (var mat in mats)
+                    {
+                        if (mat.HasProperty("_ZTest"))
+                            mat.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
+                        mat.renderQueue = onTopRenderQueue;
+                    }
+                    renderer.materials = mats;
+                }
+            }
         }
 
         /// <summary>

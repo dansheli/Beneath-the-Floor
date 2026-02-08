@@ -526,6 +526,17 @@ namespace BeneathTheFloor.Tools
         }
 
         /// <summary>
+        /// Configure detection parameters (called by RadarTool when switching modes).
+        /// </summary>
+        public void SetDetectionParameters(float perfectAngle, float maxAngle, float minDistance, float maxDistance)
+        {
+            perfectAimAngle = perfectAngle;
+            maxDetectionAngle = maxAngle;
+            minDetectionDistance = minDistance;
+            maxDetectionDistance = maxDistance;
+        }
+
+        /// <summary>
         /// Check if target is within the gauge arc (not pegged at limits).
         /// </summary>
         public bool IsTargetInArc()

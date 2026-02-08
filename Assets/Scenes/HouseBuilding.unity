@@ -27775,6 +27775,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 1927377814}
+    - targetCorrespondingSourceObject: {fileID: 7780826350791639743, guid: a1bfa4286f3bcfa4e973069412cc65f5,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1927377820}
   m_SourcePrefab: {fileID: 100100000, guid: a1bfa4286f3bcfa4e973069412cc65f5, type: 3}
 --- !u!1001 &767800477
 PrefabInstance:
@@ -31237,6 +31241,7 @@ MonoBehaviour:
   enableDebugLogs: 0
   priority: 5
   targetName: Underground Room
+  targetMode: 0
 --- !u!1001 &858420433
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -31484,6 +31489,7 @@ MonoBehaviour:
   scale: 0.8
   holdKey: 113
   startVisible: 0
+  modeSwitchKey: 9
   requiredActivationDuration: 1
   detectionRange: 25
   perfectAimAngle: 15
@@ -31508,6 +31514,9 @@ MonoBehaviour:
   hologramBobSpeed: 2
   hologramColor: {r: 0, g: 0, b: 0, a: 0.85}
   hologramEmission: 3
+  coreShardHologramPrefab: {fileID: 7780826350791639743, guid: a1bfa4286f3bcfa4e973069412cc65f5,
+    type: 3}
+  coreShardHologramColor: {r: 1, g: 0.7, b: 0.3, a: 0.85}
   renderOnTop: 1
   onTopRenderQueue: 4000
   radarInstance: {fileID: 0}
@@ -38350,14 +38359,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3bf4198187468c0439da29fd5c0f3cb6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tier1RadiusMultiplier: 1
-  tier1StrengthMultiplier: 1
   tier1MaxHardness: 1
-  tier2RadiusMultiplier: 1.2
-  tier2StrengthMultiplier: 1.3
   tier2MaxHardness: 1.5
-  tier3RadiusMultiplier: 1.5
-  tier3StrengthMultiplier: 1.6
   tier3MaxHardness: 2
   heldToolController: {fileID: 0}
   diggingSystem: {fileID: 0}
@@ -61482,6 +61485,7 @@ MonoBehaviour:
   enableDebugLogs: 0
   priority: 0
   targetName: Underground Room
+  targetMode: 0
 --- !u!4 &1719570708
 Transform:
   m_ObjectHideFlags: 0
@@ -69022,6 +69026,20 @@ MonoBehaviour:
   interactSound: {fileID: 0}
   soundVolume: 1
   hideMarkerOnInteract: 1
+--- !u!114 &1927377820
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1799690921}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af592cafa954ad64ba8a54349007d599, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  radarPriority: 50
+  radarDisplayName: Core Shard
 --- !u!1 &1927939376
 GameObject:
   m_ObjectHideFlags: 0

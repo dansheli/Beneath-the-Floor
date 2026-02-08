@@ -12,6 +12,9 @@ namespace BeneathTheFloor.World
     [RequireComponent(typeof(EngineActivationInteract))]
     public class EngineRadarTarget : MonoBehaviour
     {
+        [Header("DEPRECATED - Radar now uses mode system")]
+        [SerializeField] private bool disabled = true;
+
         [Header("Radar Settings")]
         [Tooltip("Priority for radar detection. Low so treasure chests can override when close.")]
         [SerializeField] private int radarPriority = 5;
@@ -29,6 +32,8 @@ namespace BeneathTheFloor.World
 
         private void Start()
         {
+            if (disabled) return;
+
             // Immediately register as radar target — guide the player from the start
             EnableRadarTarget();
         }

@@ -5,23 +5,30 @@ using BeneathTheFloor.Tools;
 namespace BeneathTheFloor.Editor
 {
     /// <summary>
-    /// Custom editor for RadarTool that allows previewing the hologram in Edit mode.
+    /// Custom editor for RadarTool that allows previewing holograms in Edit mode.
+    /// Supports switching between Treasure Chest and Core Shard hologram modes.
     /// </summary>
     [CustomEditor(typeof(RadarTool))]
     public class RadarToolEditor : UnityEditor.Editor
     {
         private GameObject previewHologram;
         private bool isPreviewing = false;
+        private int previewModeIndex = 0; // 0 = Treasure Chest, 1 = Core Shard
 
-        // Serialized properties for hologram
+        private static readonly string[] modeNames = { "Treasure Chest", "Core Shard" };
+
+        // Treasure Chest hologram properties
         private SerializedProperty hologramPrefabProp;
         private SerializedProperty hologramScaleProp;
         private SerializedProperty hologramOffsetProp;
         private SerializedProperty hologramBaseRotationProp;
-        private SerializedProperty hologramSpinSpeedProp;
-        private SerializedProperty hologramBobAmplitudeProp;
-        private SerializedProperty hologramColorProp;
-        private SerializedProperty hologramEmissionProp;
+
+        // Core Shard hologram properties
+        private SerializedProperty coreShardPrefabProp;
+        private SerializedProperty coreShardOffsetProp;
+        private SerializedProperty coreShardScaleProp;
+
+        // Shared
         private SerializedProperty renderOnTopProp;
 
         private void OnEnable()
@@ -30,30 +37,32 @@ namespace BeneathTheFloor.Editor
             hologramScaleProp = serializedObject.FindProperty("hologramScale");
             hologramOffsetProp = serializedObject.FindProperty("hologramOffset");
             hologramBaseRotationProp = serializedObject.FindProperty("hologramBaseRotation");
-            hologramSpinSpeedProp = serializedObject.FindProperty("hologramSpinSpeed");
-            hologramBobAmplitudeProp = serializedObject.FindProperty("hologramBobAmplitude");
-            hologramColorProp = serializedObject.FindProperty("hologramColor");
-            hologramEmissionProp = serializedObject.FindProperty("hologramEmission");
+
+            coreShardPrefabProp = serializedObject.FindProperty("coreShardHologramPrefab");
+            coreShardOffsetProp = serializedObject.FindProperty("coreShardHologramOffset");
+            coreShardScaleProp = serializedObject.FindProperty("coreShardHologramScale");
+
             renderOnTopProp = serializedObject.FindProperty("renderOnTop");
         }
 
         private void OnDisable()
         {
-            // Clean up preview when deselecting
             ClearPreview();
         }
 
+        // Helpers to get active mode properties
+        private SerializedProperty ActivePrefabProp => previewModeIndex == 0 ? hologramPrefabProp : coreShardPrefabProp;
+        private SerializedProperty ActiveOffsetProp => previewModeIndex == 0 ? hologramOffsetProp : coreShardOffsetProp;
+        private float ActiveScale => previewModeIndex == 0 ? hologramScaleProp.floatValue : coreShardScaleProp.floatValue;
+
         public override void OnInspectorGUI()
         {
-            // Draw default inspector
             DrawDefaultInspector();
 
             EditorGUILayout.Space(10);
-            EditorGUILayout.LabelField("Edit Mode Preview", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Hologram Preview", EditorStyles.boldLabel);
 
             RadarTool radarTool = (RadarTool)target;
-
-            // Find radar instance in scene
             GameObject radarInstance = FindRadarInstance(radarTool);
 
             if (radarInstance == null)
@@ -76,13 +85,43 @@ namespace BeneathTheFloor.Editor
             {
                 EditorGUILayout.Space(5);
 
+                // Mode selector
+                EditorGUI.BeginChangeCheck();
+                int newMode = GUILayout.Toolbar(previewModeIndex, modeNames, GUILayout.Height(28));
+                if (EditorGUI.EndChangeCheck() && newMode != previewModeIndex)
+                {
+                    previewModeIndex = newMode;
+                    // Rebuild preview with new mode if active
+                    if (isPreviewing)
+                    {
+                        ClearPreview();
+                        CreatePreview(radarInstance);
+                    }
+                }
+
+                EditorGUILayout.Space(5);
+
+                // Show which prefab + fields are active for this mode
+                string modeName = modeNames[previewModeIndex];
+                GameObject activePrefab = ActivePrefabProp.objectReferenceValue as GameObject;
+                string prefabName = activePrefab != null ? activePrefab.name : "(none)";
+
+                EditorGUILayout.BeginVertical("box");
+                EditorGUILayout.LabelField($"Mode: {modeName}", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField($"Prefab: {prefabName}");
+                EditorGUILayout.LabelField($"Scale: {ActiveScale:F3}");
+                EditorGUILayout.LabelField($"Offset: {ActiveOffsetProp.vector3Value}");
+                EditorGUILayout.EndVertical();
+
+                EditorGUILayout.Space(5);
+
                 // Preview buttons
                 EditorGUILayout.BeginHorizontal();
 
                 if (!isPreviewing)
                 {
                     GUI.backgroundColor = Color.green;
-                    if (GUILayout.Button("Show Hologram Preview", GUILayout.Height(30)))
+                    if (GUILayout.Button($"Show {modeName} Preview", GUILayout.Height(30)))
                     {
                         CreatePreview(radarInstance);
                     }
@@ -108,10 +147,13 @@ namespace BeneathTheFloor.Editor
 
                 if (isPreviewing && previewHologram != null)
                 {
+                    string offsetFieldName = previewModeIndex == 0 ? "Hologram Offset" : "Core Shard Hologram Offset";
+                    string scaleFieldName = previewModeIndex == 0 ? "Hologram Scale" : "Core Shard Hologram Scale";
+
                     EditorGUILayout.HelpBox(
-                        "Hologram preview is active!\n\n" +
-                        "- Adjust Hologram Offset to move it\n" +
-                        "- Adjust Hologram Scale to resize\n" +
+                        $"Previewing: {modeName} hologram\n\n" +
+                        $"- Adjust {offsetFieldName} to move it\n" +
+                        $"- Adjust {scaleFieldName} to resize\n" +
                         "- Adjust Hologram Base Rotation to rotate\n" +
                         "- Or select 'RadarHologram_Preview' in hierarchy and use gizmos",
                         MessageType.Info);
@@ -126,13 +168,30 @@ namespace BeneathTheFloor.Editor
 
                 EditorGUILayout.Space(5);
 
-                // Quick assign chest prefab button
-                if (hologramPrefabProp.objectReferenceValue == null)
+                // Quick assign buttons
+                if (previewModeIndex == 0 && hologramPrefabProp.objectReferenceValue == null)
                 {
                     GUI.backgroundColor = Color.cyan;
                     if (GUILayout.Button("Assign Treasure Chest Prefab"))
                     {
-                        AssignChestPrefab();
+                        AssignPrefab(hologramPrefabProp, new[] {
+                            "Assets/Art/Treasure_Chests/Chest_1.prefab",
+                            "Assets/Art/Treasure_Chests/Chest_2.prefab",
+                            "Assets/Art/Treasure_Chests/Chest_3.prefab"
+                        });
+                    }
+                    GUI.backgroundColor = Color.white;
+                }
+                else if (previewModeIndex == 1 && coreShardPrefabProp.objectReferenceValue == null)
+                {
+                    GUI.backgroundColor = Color.cyan;
+                    if (GUILayout.Button("Assign Core Shard Prefab"))
+                    {
+                        AssignPrefab(coreShardPrefabProp, new[] {
+                            "Assets/Art/Core Shard/Core Shard.prefab",
+                            "Assets/Prefabs/Core Shard.prefab",
+                            "Assets/Art/CoreShard/CoreShard.prefab"
+                        });
                     }
                     GUI.backgroundColor = Color.white;
                 }
@@ -151,14 +210,12 @@ namespace BeneathTheFloor.Editor
 
         private GameObject FindRadarInstance(RadarTool radarTool)
         {
-            // First check if RadarTool has a reference
             var instanceProp = serializedObject.FindProperty("radarInstance");
             if (instanceProp != null && instanceProp.objectReferenceValue != null)
             {
                 return instanceProp.objectReferenceValue as GameObject;
             }
 
-            // Search under main camera
             Camera mainCam = Camera.main;
             if (mainCam != null)
             {
@@ -172,7 +229,6 @@ namespace BeneathTheFloor.Editor
                 }
             }
 
-            // Search in scene
             var emfObjects = GameObject.FindObjectsOfType<Transform>();
             foreach (var t in emfObjects)
             {
@@ -210,14 +266,12 @@ namespace BeneathTheFloor.Editor
                 return;
             }
 
-            // Instantiate under camera
             GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab, mainCam.transform);
             instance.name = "RadarTool_EMF";
             instance.transform.localPosition = new Vector3(-0.35f, -0.25f, 0.4f);
             instance.transform.localRotation = Quaternion.Euler(10f, 15f, -5f);
             instance.transform.localScale = Vector3.one * 0.8f;
 
-            // Assign to RadarTool
             var instanceProp = serializedObject.FindProperty("radarInstance");
             if (instanceProp != null)
             {
@@ -227,8 +281,6 @@ namespace BeneathTheFloor.Editor
 
             EditorUtility.SetDirty(radarTool);
             Selection.activeGameObject = instance;
-
-            Debug.Log("[RadarToolEditor] Created radar instance under Main Camera for preview.");
         }
 
         private void CreatePreview(GameObject radarInstance)
@@ -237,47 +289,46 @@ namespace BeneathTheFloor.Editor
 
             ClearPreview();
 
-            // Create preview container
             previewHologram = new GameObject("RadarHologram_Preview");
             previewHologram.transform.SetParent(radarInstance.transform);
-            previewHologram.hideFlags = HideFlags.DontSave; // Don't save with scene
+            previewHologram.hideFlags = HideFlags.DontSave;
 
-            // Apply transform from settings
-            previewHologram.transform.localPosition = hologramOffsetProp.vector3Value;
+            // Use active mode's transform settings
+            previewHologram.transform.localPosition = ActiveOffsetProp.vector3Value;
             previewHologram.transform.localRotation = Quaternion.Euler(hologramBaseRotationProp.vector3Value);
-            previewHologram.transform.localScale = Vector3.one * hologramScaleProp.floatValue;
+            previewHologram.transform.localScale = Vector3.one * ActiveScale;
 
-            // Instantiate prefab or create fallback
-            GameObject hologramPrefab = hologramPrefabProp.objectReferenceValue as GameObject;
+            GameObject prefab = ActivePrefabProp.objectReferenceValue as GameObject;
 
-            if (hologramPrefab != null)
+            if (prefab != null)
             {
-                GameObject model = (GameObject)PrefabUtility.InstantiatePrefab(hologramPrefab, previewHologram.transform);
+                GameObject model = (GameObject)PrefabUtility.InstantiatePrefab(prefab, previewHologram.transform);
                 model.name = "HologramModel_Preview";
                 model.transform.localPosition = Vector3.zero;
                 model.transform.localRotation = Quaternion.identity;
                 model.transform.localScale = Vector3.one;
                 model.hideFlags = HideFlags.DontSave;
 
-                ApplyPreviewMaterial(model);
+                // Keep original prefab materials - just disable shadows
+                foreach (var renderer in model.GetComponentsInChildren<Renderer>())
+                {
+                    renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    renderer.receiveShadows = false;
+                }
             }
             else
             {
-                // Create fallback shape
                 CreateFallbackPreviewShape();
             }
 
             isPreviewing = true;
             SceneView.RepaintAll();
-
-            Debug.Log("[RadarToolEditor] Created hologram preview. Adjust settings and see changes in Scene view.");
         }
 
         private void CreateFallbackPreviewShape()
         {
             if (previewHologram == null) return;
 
-            // Body
             GameObject body = GameObject.CreatePrimitive(PrimitiveType.Cube);
             body.name = "ChestBody_Preview";
             body.transform.SetParent(previewHologram.transform);
@@ -286,7 +337,6 @@ namespace BeneathTheFloor.Editor
             body.hideFlags = HideFlags.DontSave;
             DestroyImmediate(body.GetComponent<Collider>());
 
-            // Lid
             GameObject lid = GameObject.CreatePrimitive(PrimitiveType.Cube);
             lid.name = "ChestLid_Preview";
             lid.transform.SetParent(previewHologram.transform);
@@ -303,23 +353,19 @@ namespace BeneathTheFloor.Editor
         {
             if (obj == null) return;
 
-            Color holoColor = hologramColorProp.colorValue;
-            float emission = hologramEmissionProp.floatValue;
+            Color holoColor = new Color(0.4f, 1f, 1f, 0.85f); // Cyan fallback
 
             foreach (var renderer in obj.GetComponentsInChildren<Renderer>())
             {
-                // Create simple preview material
-                Material mat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
-                if (mat.shader == null)
-                    mat = new Material(Shader.Find("Standard"));
+                Shader shader = Shader.Find("Universal Render Pipeline/Lit");
+                if (shader == null)
+                    shader = Shader.Find("Standard");
 
-                // Make it semi-transparent and glowing
-                mat.SetFloat("_Surface", 1); // Transparent
+                Material mat = new Material(shader);
+                mat.SetFloat("_Surface", 1);
                 mat.SetFloat("_Blend", 0);
                 mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
                 mat.SetColor("_BaseColor", holoColor);
-                mat.EnableKeyword("_EMISSION");
-                mat.SetColor("_EmissionColor", new Color(holoColor.r * emission, holoColor.g * emission, holoColor.b * emission));
                 mat.renderQueue = 3000;
 
                 renderer.sharedMaterial = mat;
@@ -331,23 +377,9 @@ namespace BeneathTheFloor.Editor
         {
             if (previewHologram == null || radarInstance == null) return;
 
-            previewHologram.transform.localPosition = hologramOffsetProp.vector3Value;
+            previewHologram.transform.localPosition = ActiveOffsetProp.vector3Value;
             previewHologram.transform.localRotation = Quaternion.Euler(hologramBaseRotationProp.vector3Value);
-            previewHologram.transform.localScale = Vector3.one * hologramScaleProp.floatValue;
-
-            // Update material color
-            Color holoColor = hologramColorProp.colorValue;
-            float emission = hologramEmissionProp.floatValue;
-
-            foreach (var renderer in previewHologram.GetComponentsInChildren<Renderer>())
-            {
-                if (renderer.sharedMaterial != null)
-                {
-                    renderer.sharedMaterial.SetColor("_BaseColor", holoColor);
-                    renderer.sharedMaterial.SetColor("_EmissionColor",
-                        new Color(holoColor.r * emission, holoColor.g * emission, holoColor.b * emission));
-                }
-            }
+            previewHologram.transform.localScale = Vector3.one * ActiveScale;
 
             SceneView.RepaintAll();
         }
@@ -363,24 +395,17 @@ namespace BeneathTheFloor.Editor
             SceneView.RepaintAll();
         }
 
-        private void AssignChestPrefab()
+        private void AssignPrefab(SerializedProperty prop, string[] searchPaths)
         {
-            string[] paths = {
-                "Assets/Art/Treasure_Chests/Chest_1.prefab",
-                "Assets/Art/Treasure_Chests/Chest_2.prefab",
-                "Assets/Art/Treasure_Chests/Chest_3.prefab"
-            };
-
-            foreach (string path in paths)
+            foreach (string path in searchPaths)
             {
                 GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
                 if (prefab != null)
                 {
-                    hologramPrefabProp.objectReferenceValue = prefab;
+                    prop.objectReferenceValue = prefab;
                     serializedObject.ApplyModifiedProperties();
-                    Debug.Log($"[RadarToolEditor] Assigned {prefab.name} as hologram prefab.");
+                    Debug.Log($"[RadarToolEditor] Assigned {prefab.name}");
 
-                    // Update preview if active
                     if (isPreviewing)
                     {
                         GameObject radarInstance = FindRadarInstance((RadarTool)target);
@@ -394,8 +419,34 @@ namespace BeneathTheFloor.Editor
                 }
             }
 
-            EditorUtility.DisplayDialog("Assign Chest Prefab",
-                "Could not find treasure chest prefab in:\nAssets/Art/Treasure_Chests/",
+            // If not found, search whole project for likely matches
+            string keyword = prop == coreShardPrefabProp ? "Core Shard" : "Chest";
+            string[] guids = AssetDatabase.FindAssets($"{keyword} t:Prefab");
+            if (guids.Length > 0)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+                GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                if (prefab != null)
+                {
+                    prop.objectReferenceValue = prefab;
+                    serializedObject.ApplyModifiedProperties();
+                    Debug.Log($"[RadarToolEditor] Found and assigned {prefab.name} from {path}");
+
+                    if (isPreviewing)
+                    {
+                        GameObject radarInstance = FindRadarInstance((RadarTool)target);
+                        if (radarInstance != null)
+                        {
+                            ClearPreview();
+                            CreatePreview(radarInstance);
+                        }
+                    }
+                    return;
+                }
+            }
+
+            EditorUtility.DisplayDialog("Assign Prefab",
+                $"Could not find a matching prefab.\nDrag one manually into the field.",
                 "OK");
         }
     }

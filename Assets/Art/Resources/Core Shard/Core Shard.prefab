@@ -73,6 +73,11 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: bcdbeda1a06d36049a00b00cae3c403b,
+        type: 3}
+      propertyPath: m_CastShadows
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: bcdbeda1a06d36049a00b00cae3c403b,
         type: 3}
       propertyPath: m_Name
@@ -137,7 +142,7 @@ MonoBehaviour:
   heldPosition: {x: 0.25, y: -0.2, z: 0.4}
   heldRotation: {x: 15, y: -30, z: 10}
   heldScale: 0.15
-  highlightColor: {r: 1.2, g: 1.2, b: 1.2, a: 1}
+  highlightColor: {r: 0.03396219, g: 0.031463083, b: 0.031463083, a: 1}
   pickupSound: {fileID: 0}
   pickupVolume: 0.7
 --- !u!135 &-2905010416526596627

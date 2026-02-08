@@ -42,5 +42,5 @@ MonoBehaviour:
   crosshairHintText:
   crosshairHintHideTrigger: 0
   lockUpgradesExceptWinch: 0
-  requiredDepth: -20
+  requiredDepth: -15
   useSubtleMarker: 0

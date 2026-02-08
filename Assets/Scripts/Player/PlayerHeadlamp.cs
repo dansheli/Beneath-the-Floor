@@ -186,6 +186,13 @@ namespace BeneathTheFloor.Player
 
             // Force pixel rendering to prevent Unity from culling the headlamp
             headlampLight.renderMode = LightRenderMode.ForcePixel;
+
+            // Exclude HeldTool layer so the headlamp doesn't illuminate held items (radar, etc.)
+            int heldToolLayer = LayerMask.NameToLayer("HeldTool");
+            if (heldToolLayer >= 0)
+            {
+                headlampLight.cullingMask &= ~(1 << heldToolLayer);
+            }
         }
 
         private void SetupAudio()

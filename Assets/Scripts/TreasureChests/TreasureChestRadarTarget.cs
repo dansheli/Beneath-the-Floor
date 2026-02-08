@@ -116,8 +116,9 @@ namespace BeneathTheFloor.TreasureChests
             if (radarTarget == null)
             {
                 radarTarget = gameObject.AddComponent<RadarTarget>();
-                // Use reflection or serialized field to set priority and name
-                SetRadarTargetFields();
+                radarTarget.SetPriority(radarPriority);
+                radarTarget.SetTargetName(radarDisplayName);
+                radarTarget.SetTargetMode(1); // TreasureChests mode
             }
 
             radarTarget.enabled = true;
@@ -127,28 +128,6 @@ namespace BeneathTheFloor.TreasureChests
             if (debugMode)
             {
                 Debug.Log($"[TreasureChestRadarTarget] Enabled radar for: {chest.ChestId}");
-            }
-        }
-
-        private void SetRadarTargetFields()
-        {
-            // RadarTarget fields are private with serialized backing
-            // We need to use reflection to set them, or modify RadarTarget to expose setters
-            // For now, we'll create a workaround by modifying the component directly
-
-            // Try to set via reflection
-            var priorityField = typeof(RadarTarget).GetField("priority",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            if (priorityField != null)
-            {
-                priorityField.SetValue(radarTarget, radarPriority);
-            }
-
-            var nameField = typeof(RadarTarget).GetField("targetName",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            if (nameField != null)
-            {
-                nameField.SetValue(radarTarget, radarDisplayName);
             }
         }
 

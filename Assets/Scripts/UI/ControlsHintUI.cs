@@ -45,6 +45,7 @@ namespace BeneathTheFloor.UI
         private string _actionHex;
         private bool _hasJetpack = false;
         private bool _hasDrillPike = false;
+        private bool _hasMultipleRadarModes = false;
 
         public static ControlsHintUI Instance { get; private set; }
 
@@ -138,6 +139,7 @@ namespace BeneathTheFloor.UI
             // Subscribe to pickup events
             JetpackPickup.OnJetpackPickedUp += OnJetpackPickedUp;
             DrillPikePickup.OnDrillPikePickedUp += OnDrillPikePickedUp;
+            RadarTool.OnRadarModeChanged += OnRadarModeChanged;
         }
 
         private void OnDisable()
@@ -145,6 +147,7 @@ namespace BeneathTheFloor.UI
             // Unsubscribe from pickup events
             JetpackPickup.OnJetpackPickedUp -= OnJetpackPickedUp;
             DrillPikePickup.OnDrillPikePickedUp -= OnDrillPikePickedUp;
+            RadarTool.OnRadarModeChanged -= OnRadarModeChanged;
         }
 
         private void OnDestroy()
@@ -163,6 +166,15 @@ namespace BeneathTheFloor.UI
         {
             _hasDrillPike = true;
             UpdateHintText();
+        }
+
+        private void OnRadarModeChanged(RadarMode mode)
+        {
+            if (!_hasMultipleRadarModes && RadarTool.Instance != null && RadarTool.Instance.HasMultipleModes)
+            {
+                _hasMultipleRadarModes = true;
+                UpdateHintText();
+            }
         }
 
         private void UpdateHintText()
@@ -185,8 +197,14 @@ namespace BeneathTheFloor.UI
 
             hints += $"<color=#{_keyHex}>E</color> <color=#{_actionHex}>Collect / Interact</color>\n" +
                     flyControl + "\n" +
-                    $"<color=#{_keyHex}>Q</color> <color=#{_actionHex}>Radar</color>\n" +
-                    $"<color=#{_keyHex}>I</color> <color=#{_actionHex}>Inventory</color>";
+                    $"<color=#{_keyHex}>Q</color> <color=#{_actionHex}>Radar</color>\n";
+
+            if (_hasMultipleRadarModes)
+            {
+                hints += $"<color=#{_keyHex}>Tab</color> <color=#{_actionHex}>Radar Mode</color>\n";
+            }
+
+            hints += $"<color=#{_keyHex}>I</color> <color=#{_actionHex}>Inventory</color>";
 
             _hintText.text = hints;
         }

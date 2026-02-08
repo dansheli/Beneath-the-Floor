@@ -478,6 +478,10 @@ namespace BeneathTheFloor.Tools
             AudioListener listener = overlayCamera.GetComponent<AudioListener>();
             if (listener != null) Destroy(listener);
 
+            // Create a dedicated light that only illuminates held tools (HeldTool layer).
+            // This ensures tools and radar are always visible regardless of scene darkness.
+            CreateHeldToolLight(mainCam.transform, heldToolLayer);
+
             // Assign all tools to HeldTool layer and reset their materials to opaque
             SetLayerRecursively(tool1_Base, heldToolLayer);
             SetLayerRecursively(tool1_Tier1, heldToolLayer);
@@ -574,6 +578,31 @@ namespace BeneathTheFloor.Tools
                         stack.Add(overlayCam);
                 }
             }
+        }
+
+        /// <summary>
+        /// Creates a light that only illuminates objects on the HeldTool layer.
+        /// Ensures tools and radar are always visible even in pitch-dark areas.
+        /// The light has no effect on the environment (terrain, walls, etc.).
+        /// </summary>
+        private void CreateHeldToolLight(Transform parent, int heldToolLayer)
+        {
+            // Check if already exists
+            Transform existing = parent.Find("HeldToolLight");
+            if (existing != null) return;
+
+            GameObject lightObj = new GameObject("HeldToolLight");
+            lightObj.transform.SetParent(parent, false);
+            lightObj.transform.localPosition = new Vector3(0f, 0.3f, 0.5f); // Slightly above and forward
+
+            Light toolLight = lightObj.AddComponent<Light>();
+            toolLight.type = LightType.Point;
+            toolLight.range = 3f;
+            toolLight.intensity = 0.75f;
+            toolLight.color = new Color(1f, 0.97f, 0.95f); // Slightly warm white
+            toolLight.shadows = LightShadows.None;
+            toolLight.cullingMask = 1 << heldToolLayer; // ONLY lights HeldTool layer
+            toolLight.renderMode = LightRenderMode.ForcePixel;
         }
 
         /// <summary>
