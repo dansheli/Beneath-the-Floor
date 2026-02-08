@@ -962,6 +962,22 @@ namespace BeneathTheFloor.Save
                     Upgrades.UpgradeSystem.Instance.GetUnlockedUpgradeIds()
                 );
             }
+
+            // Capture RuntimeUpgrade levels from UpgradeStation into the save file
+            if (UpgradeStation.Instance != null)
+            {
+                currentSave.runtimeUpgradeLevels = new List<UpgradeLevelEntry>();
+                foreach (var upgrade in UpgradeStation.Instance.RuntimeUpgrades)
+                {
+                    currentSave.runtimeUpgradeLevels.Add(new UpgradeLevelEntry
+                    {
+                        upgradeId = upgrade.upgradeId,
+                        level = upgrade.currentLevel
+                    });
+                }
+                if (debugLogs)
+                    Debug.Log($"[SaveManager] Captured {currentSave.runtimeUpgradeLevels.Count} runtime upgrade levels");
+            }
         }
 
         private void CaptureWinchData()
@@ -1423,7 +1439,20 @@ namespace BeneathTheFloor.Save
             // The tool tier is already set directly in ApplyToolData() using currentSave.currentToolTier.
             // SetUnlockedUpgrades calculates tier from upgrade names, which is unreliable.
 
-            // Just reload UpgradeStation progress (tools, energy capacity, etc.)
+            // Write saved RuntimeUpgrade levels to PlayerPrefs BEFORE reloading
+            // This ensures UpgradeStation reads the correct per-slot values, not stale global ones
+            if (currentSave.runtimeUpgradeLevels != null && currentSave.runtimeUpgradeLevels.Count > 0)
+            {
+                foreach (var entry in currentSave.runtimeUpgradeLevels)
+                {
+                    PlayerPrefs.SetInt($"RuntimeUpgrade_{entry.upgradeId}", entry.level);
+                }
+                PlayerPrefs.Save();
+                if (debugLogs)
+                    Debug.Log($"[SaveManager] Restored {currentSave.runtimeUpgradeLevels.Count} runtime upgrade levels to PlayerPrefs");
+            }
+
+            // Now reload UpgradeStation progress from the updated PlayerPrefs
             if (UpgradeStation.Instance != null)
             {
                 UpgradeStation.Instance.ReloadUpgradeProgress();

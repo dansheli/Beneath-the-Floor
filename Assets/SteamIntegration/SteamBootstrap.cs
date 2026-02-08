@@ -25,11 +25,9 @@ namespace BeneathTheFloor.Steam
             DontDestroyOnLoad(gameObject);
 
 #if !DISABLESTEAMWORKS
-            if (SteamAPI.RestartAppIfNecessary(new AppId_t(4372280)))
-            {
-                Application.Quit();
-                return;
-            }
+            // NOTE: RestartAppIfNecessary removed - it forces Steam relaunch
+            // which prevents local testing and blocks testers without Steam.
+            // The game runs standalone; Steam overlay still works if Steam is running.
 
             try
             {
@@ -40,12 +38,12 @@ namespace BeneathTheFloor.Steam
                 }
                 else
                 {
-                    Debug.Log("[Steam] Not running via Steam client");
+                    Debug.Log("[Steam] Not running via Steam - running standalone");
                 }
             }
             catch (System.DllNotFoundException)
             {
-                Debug.Log("[Steam] Native libraries not found");
+                Debug.Log("[Steam] Native libraries not found - running standalone");
             }
 #endif
         }

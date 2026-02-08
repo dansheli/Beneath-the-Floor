@@ -1070,10 +1070,10 @@ namespace BeneathTheFloor.Tools
             Vector3 startPos = initialLocalPosition;
             Quaternion startRot = initialLocalRotation;
 
-            // Fire projectile - tight beam, high impact (balanced for 0.2m voxels)
-            // ToolRadiusMultiplier already includes tier
+            // Fire projectile - punchy shot that removes a satisfying chunk (balanced for 0.2m voxels)
+            // Quick shot = ~1.2m radius (6 voxels) so it's clearly the best tool in the game
             float quickDigRadius = Digging.DiggingSystem.Instance != null ? Digging.DiggingSystem.Instance.DigRadius : 0.5f;
-            quickDigRadius *= Machines.UpgradeStation.ToolRadiusMultiplier * 0.4f;
+            quickDigRadius *= Machines.UpgradeStation.ToolRadiusMultiplier * 1.2f;
             FireSonicProjectile(0.12f, quickDigRadius, 20f, 3f, sonicPulseColor);
 
             // Flash tip glow
@@ -1413,9 +1413,9 @@ namespace BeneathTheFloor.Tools
             // Fire charged projectile - visual matches the charge ball size (same formula as UpdateChargeBall)
             float chargedVisual = 0.01f + 0.12f * Mathf.Sqrt(chargePower);
             float baseDigRadius = Digging.DiggingSystem.Instance != null ? Digging.DiggingSystem.Instance.DigRadius : 0.5f;
-            // ToolRadiusMultiplier already includes tier
+            // Charged shot scales from quick-shot size up to massive blast
             float chargedDigRadius = baseDigRadius * Machines.UpgradeStation.ToolRadiusMultiplier
-                * (1f + chargePower * 0.6f);
+                * (1.2f + chargePower * 1.5f);
             float chargedSpeed = 18f + Mathf.Min(chargePower, 3f) * 8f; // Speed caps at reasonable value
             Color chargedColor = Color.Lerp(sonicPulseColor, sonicChargedPulseColor, Mathf.Clamp01(chargePower));
             FireSonicProjectile(chargedVisual, chargedDigRadius, chargedSpeed, 3f, chargedColor);

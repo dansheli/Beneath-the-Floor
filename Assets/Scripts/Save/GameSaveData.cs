@@ -32,6 +32,9 @@ namespace BeneathTheFloor.Save
         public List<string> unlockedUpgrades = new List<string>();
         public List<OwnedToolSaveData> ownedTools = new List<OwnedToolSaveData>();
 
+        // RuntimeUpgrade levels (tool_power, tool_tier, energy_capacity, etc.)
+        public List<UpgradeLevelEntry> runtimeUpgradeLevels = new List<UpgradeLevelEntry>();
+
         // Winch
         public int winchTier;
 
@@ -135,6 +138,13 @@ namespace BeneathTheFloor.Save
         public string itemName;
         public int quantity;
         public int slotIndex;
+    }
+
+    [Serializable]
+    public class UpgradeLevelEntry
+    {
+        public string upgradeId;
+        public int level;
     }
 
     [Serializable]

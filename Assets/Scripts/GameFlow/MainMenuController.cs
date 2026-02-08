@@ -450,13 +450,24 @@ namespace BeneathTheFloor.GameFlow
             PlayerPrefs.DeleteKey("logistics_capacity_level");
             PlayerPrefs.DeleteKey("logistics_advanced_module");
 
-            // Clear upgrade station progress
+            // Clear upgrade station progress (legacy keys)
             PlayerPrefs.DeleteKey("UpgradeStation_tool_tier");
             PlayerPrefs.DeleteKey("UpgradeStation_energy_capacity");
             PlayerPrefs.DeleteKey("UpgradeStation_headlamp");
             PlayerPrefs.DeleteKey("UpgradeStation_inventory");
             PlayerPrefs.DeleteKey("UpgradeStation_radar");
             PlayerPrefs.DeleteKey("UpgradeStation_jetpack");
+
+            // Clear RuntimeUpgrade keys (the actual upgrade progress UpgradeStation reads)
+            PlayerPrefs.DeleteKey("RuntimeUpgrade_tool_power");
+            PlayerPrefs.DeleteKey("RuntimeUpgrade_tool_tier");
+            PlayerPrefs.DeleteKey("RuntimeUpgrade_energy_capacity");
+            PlayerPrefs.DeleteKey("RuntimeUpgrade_sonic_pulser");
+            PlayerPrefs.DeleteKey("RuntimeUpgrade_inventory_size");
+            PlayerPrefs.DeleteKey("RuntimeUpgrade_headlamp");
+            PlayerPrefs.DeleteKey("RuntimeUpgrade_move_speed");
+            PlayerPrefs.DeleteKey("RuntimeUpgrade_lamp_purchase");
+            PlayerPrefs.DeleteKey("RuntimeUpgrade_winch_cable");
 
             PlayerPrefs.Save();
 

@@ -147,56 +147,63 @@ namespace BeneathTheFloor.Digging
             int toolIndex = heldToolController.GetCurrentToolIndex();
             ToolData toolData = heldToolController.GetCurrentTool();
 
-            // Per-tool dig profile: small radius + high strength for natural-looking terrain
+            // Per-tool dig profile with aggressive gaps so each tool feels distinct.
             // At 0.2m voxels, effective radius in voxels ≈ (base 0.5 × mult) / 0.2
             float radiusMultiplier, strengthMultiplier, maxHardness;
             string toolId, displayName;
 
             switch (toolIndex)
             {
-                case 0: // Shovel - tight scoop, moderate power
-                    radiusMultiplier = 0.6f;    // 0.30m = 1.5 voxels
-                    strengthMultiplier = 3.0f;   // effective 2.4
+                case 0: // Shovel - starter tool
+                    radiusMultiplier = 0.8f;    // 0.40m = 2.0 voxels
+                    strengthMultiplier = 3.5f;   // effective 2.8
                     maxHardness = tier1MaxHardness;
                     toolId = "shovel";
                     displayName = toolData?.toolName ?? "Shovel";
                     break;
-                case 1: // Heavy Spade - slightly wider, stronger
-                    radiusMultiplier = 0.7f;    // 0.35m = 1.75 voxels
-                    strengthMultiplier = 3.6f;   // effective 2.88
+                case 1: // Heavy Spade - noticeably wider and stronger
+                    radiusMultiplier = 1.1f;    // 0.55m = 2.75 voxels
+                    strengthMultiplier = 5.5f;   // effective 4.4
                     maxHardness = tier2MaxHardness;
                     toolId = "heavy_spade";
                     displayName = toolData?.toolName ?? "Heavy Spade";
                     break;
-                case 2: // Pickaxe - focused strike, high power
-                    radiusMultiplier = 0.75f;   // 0.375m = ~1.9 voxels
-                    strengthMultiplier = 4.2f;   // effective 3.36
+                case 2: // Pickaxe - big chunks, high power
+                    radiusMultiplier = 1.5f;    // 0.75m = 3.75 voxels
+                    strengthMultiplier = 8.0f;   // effective 6.4
                     maxHardness = tier3MaxHardness;
                     toolId = "pickaxe";
                     displayName = toolData?.toolName ?? "Pickaxe";
                     break;
-                case 3: // Drill Pike - piercing thrust, deep and narrow
-                    radiusMultiplier = 0.65f;   // 0.325m = ~1.6 voxels (narrow bore)
-                    strengthMultiplier = 5.4f;   // effective 4.32 (deepest per hit)
+                case 3: // Drill Pike - heavy industrial
+                    radiusMultiplier = 1.6f;    // 0.80m = 4.0 voxels
+                    strengthMultiplier = 9.0f;   // effective 7.2
                     maxHardness = 3.0f;
                     toolId = "drill_pike";
                     displayName = toolData?.toolName ?? "Drill Pike";
                     break;
-                case 4: // Sonic Pulser - normal dig (quick shot handled separately in ToolVisual)
-                    radiusMultiplier = 0.8f;    // 0.40m = 2.0 voxels
-                    strengthMultiplier = 4.8f;   // effective 3.84
+                case 4: // Sonic Pulser - biggest and most powerful
+                    radiusMultiplier = 2.4f;    // 1.20m = 6.0 voxels
+                    strengthMultiplier = 16.0f;  // effective 12.8
                     maxHardness = 5.0f;
                     toolId = "sonic_pulser";
                     displayName = toolData?.toolName ?? "Sonic Pulser";
                     break;
                 default:
-                    radiusMultiplier = 0.6f;
-                    strengthMultiplier = 3.0f;
+                    radiusMultiplier = 0.8f;
+                    strengthMultiplier = 3.5f;
                     maxHardness = 1.0f;
                     toolId = "unknown";
                     displayName = "Unknown Tool";
                     break;
             }
+
+            // Per-tier boost: each tier makes BOTH radius and strength noticeably larger
+            int tier = heldToolController.GetCurrentTier();
+            float tierRadiusBoost = 1.0f + (tier - 1) * 0.15f;   // T1=1.0, T2=1.15, T3=1.30, T4=1.45
+            float tierStrengthBoost = 1.0f + (tier - 1) * 0.25f;  // T1=1.0, T2=1.25, T3=1.50, T4=1.75
+            radiusMultiplier *= tierRadiusBoost;
+            strengthMultiplier *= tierStrengthBoost;
 
             // Apply digSpeed from ToolData if available
             if (toolData != null && toolData.digSpeed > 0)
