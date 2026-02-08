@@ -842,14 +842,10 @@ namespace BeneathTheFloor.Digging
             // Trigger screen shake after final hit for impact
             TriggerScreenShake(0.15f + remainingHits * 0.03f, 0.08f + remainingHits * 0.02f);
 
-            // Consume extra energy for charged attack (scales with hits)
+            // Drill Pike super hit: flat 8 energy bonus (normal dig already cost 2, total = 10)
             if (!disableEnergyConsumption && EnergyManager.Instance != null)
             {
-                int energyCost = Mathf.CeilToInt(1f + chargePower * remainingHits);
-                for (int i = 0; i < energyCost; i++)
-                {
-                    EnergyManager.Instance.TryConsumeDigEnergy();
-                }
+                EnergyManager.Instance.ConsumeEnergy(8f);
             }
 
             if (enableDebugLogs)

@@ -244,37 +244,8 @@ namespace BeneathTheFloor.Energy
             energyText.alignment = TextAlignmentOptions.Center;
             energyText.enableWordWrapping = false;
 
-            // LAYER 4: Energy drink hint (centered on screen, above the energy bar)
-            energyDrinkHint = new GameObject("EnergyDrinkHint");
-            energyDrinkHint.transform.SetParent(canvas.transform, false);
-            RectTransform hintRect = energyDrinkHint.AddComponent<RectTransform>();
-            hintRect.anchorMin = new Vector2(0.5f, 0.5f);
-            hintRect.anchorMax = new Vector2(0.5f, 0.5f);
-            hintRect.pivot = new Vector2(0.5f, 0.5f);
-            hintRect.anchoredPosition = new Vector2(0, -50);
-            hintRect.sizeDelta = new Vector2(400, 60);
-
-            // Background for hint
-            Image hintBg = energyDrinkHint.AddComponent<Image>();
-            hintBg.color = new Color(0.1f, 0.1f, 0.1f, 0.85f);
-
-            // Hint text
-            GameObject hintTextObj = new GameObject("HintText");
-            hintTextObj.transform.SetParent(energyDrinkHint.transform, false);
-            RectTransform hintTextRect = hintTextObj.AddComponent<RectTransform>();
-            hintTextRect.anchorMin = Vector2.zero;
-            hintTextRect.anchorMax = Vector2.one;
-            hintTextRect.offsetMin = new Vector2(10, 5);
-            hintTextRect.offsetMax = new Vector2(-10, -5);
-            hintText = hintTextObj.AddComponent<TextMeshProUGUI>();
-            hintText.text = "Use an energy drink, press R to drink";
-            hintText.fontSize = 20;
-            hintText.color = new Color(1f, 0.9f, 0.4f);
-            hintText.alignment = TextAlignmentOptions.Center;
-            hintText.enableWordWrapping = false;
-
-            // Initially hidden
-            energyDrinkHint.SetActive(false);
+            // LAYER 4: Energy drink pop-up (created on-demand via CreateEnergyDrinkHint)
+            // Don't create here - will be created when first needed
         }
 
 
@@ -345,18 +316,11 @@ namespace BeneathTheFloor.Energy
         }
 
         /// <summary>
-        /// Shows the energy drink hint to the player.
-        /// Called when player tries to dig without enough energy.
+        /// Shows the energy drink pop-up to the player.
+        /// Always shows when energy depletes - text changes based on drink availability.
         /// </summary>
         public void ShowEnergyDrinkHint()
         {
-            // Only show if player has energy drinks available
-            if (energyManager != null && energyManager.DrinkCount <= 0)
-            {
-                Debug.Log("[EnergyUI] ShowEnergyDrinkHint: No drinks available, skipping hint");
-                return;
-            }
-
             // Create hint if it doesn't exist yet
             if (energyDrinkHint == null)
             {
@@ -365,19 +329,56 @@ namespace BeneathTheFloor.Energy
 
             if (energyDrinkHint != null)
             {
+                // Update text based on drink availability
+                if (hintText != null)
+                {
+                    if (energyManager != null && energyManager.DrinkCount > 0)
+                    {
+                        hintText.text = $"Press  R  to use Energy Drink  ({energyManager.DrinkCount}/{energyManager.MaxDrinks})";
+                    }
+                    else
+                    {
+                        hintText.text = "No Energy Drinks! Buy more at the station.";
+                    }
+                }
+
                 energyDrinkHint.SetActive(true);
                 isHintShowing = true;
                 hintHideTime = Time.time + hintDisplayDuration;
-                Debug.Log("[EnergyUI] ShowEnergyDrinkHint: Hint shown!");
-            }
-            else
-            {
-                Debug.LogWarning("[EnergyUI] ShowEnergyDrinkHint: Failed to create hint!");
+
+                // Animate: scale pop-up from small to full size for attention
+                StartCoroutine(PopUpAnimation());
             }
         }
 
         /// <summary>
-        /// Creates the energy drink hint UI if it doesn't exist.
+        /// Animate the pop-up scaling in for visual punch.
+        /// </summary>
+        private System.Collections.IEnumerator PopUpAnimation()
+        {
+            if (energyDrinkHint == null) yield break;
+            RectTransform rect = energyDrinkHint.GetComponent<RectTransform>();
+            if (rect == null) yield break;
+
+            float duration = 0.25f;
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = elapsed / duration;
+                // Overshoot bounce: scale goes to 1.15 then back to 1.0
+                float scale = t < 0.6f
+                    ? Mathf.Lerp(0.3f, 1.15f, t / 0.6f)
+                    : Mathf.Lerp(1.15f, 1.0f, (t - 0.6f) / 0.4f);
+                rect.localScale = Vector3.one * scale;
+                yield return null;
+            }
+            rect.localScale = Vector3.one;
+        }
+
+        /// <summary>
+        /// Creates the energy drink pop-up UI centered on screen.
+        /// Prominent and eye-catching to teach the drink mechanic.
         /// </summary>
         private void CreateEnergyDrinkHint()
         {
@@ -388,23 +389,27 @@ namespace BeneathTheFloor.Energy
             }
             if (canvas == null)
             {
-                Debug.LogWarning("[EnergyUI] CreateEnergyDrinkHint: No canvas found!");
                 return;
             }
 
-            // Create hint centered on screen
-            energyDrinkHint = new GameObject("EnergyDrinkHint");
+            // Center-screen pop-up panel
+            energyDrinkHint = new GameObject("EnergyDrinkPopUp");
             energyDrinkHint.transform.SetParent(canvas.transform, false);
             RectTransform hintRect = energyDrinkHint.AddComponent<RectTransform>();
             hintRect.anchorMin = new Vector2(0.5f, 0.5f);
             hintRect.anchorMax = new Vector2(0.5f, 0.5f);
             hintRect.pivot = new Vector2(0.5f, 0.5f);
-            hintRect.anchoredPosition = new Vector2(0, -50);
-            hintRect.sizeDelta = new Vector2(400, 60);
+            hintRect.anchoredPosition = Vector2.zero; // Dead center
+            hintRect.sizeDelta = new Vector2(500, 80);
 
-            // Background
+            // Dark background with colored border feel
             Image hintBg = energyDrinkHint.AddComponent<Image>();
-            hintBg.color = new Color(0.1f, 0.1f, 0.1f, 0.85f);
+            hintBg.color = new Color(0.08f, 0.08f, 0.12f, 0.92f);
+
+            // Outline for visual punch
+            var outline = energyDrinkHint.AddComponent<Outline>();
+            outline.effectColor = new Color(1f, 0.75f, 0.2f, 0.8f); // Gold border
+            outline.effectDistance = new Vector2(2, 2);
 
             // Text
             GameObject hintTextObj = new GameObject("HintText");
@@ -412,16 +417,15 @@ namespace BeneathTheFloor.Energy
             RectTransform hintTextRect = hintTextObj.AddComponent<RectTransform>();
             hintTextRect.anchorMin = Vector2.zero;
             hintTextRect.anchorMax = Vector2.one;
-            hintTextRect.offsetMin = new Vector2(10, 5);
-            hintTextRect.offsetMax = new Vector2(-10, -5);
+            hintTextRect.offsetMin = new Vector2(15, 5);
+            hintTextRect.offsetMax = new Vector2(-15, -5);
             hintText = hintTextObj.AddComponent<TextMeshProUGUI>();
-            hintText.text = "Use an energy drink, press R to drink";
-            hintText.fontSize = 20;
-            hintText.color = new Color(1f, 0.9f, 0.4f);
+            hintText.text = "Press  R  to use Energy Drink";
+            hintText.fontSize = 26;
+            hintText.fontStyle = TMPro.FontStyles.Bold;
+            hintText.color = new Color(1f, 0.9f, 0.35f); // Bright gold
             hintText.alignment = TextAlignmentOptions.Center;
             hintText.enableWordWrapping = false;
-
-            Debug.Log("[EnergyUI] CreateEnergyDrinkHint: Hint UI created successfully");
         }
 
         /// <summary>
@@ -507,6 +511,9 @@ namespace BeneathTheFloor.Energy
             {
                 lowEnergyWarning.SetActive(false);
             }
+
+            // Show center-screen energy drink pop-up
+            ShowEnergyDrinkHint();
         }
 
         private void OnEnergyRestored()
@@ -515,6 +522,9 @@ namespace BeneathTheFloor.Energy
             {
                 noEnergyWarning.SetActive(false);
             }
+
+            // Hide drink hint when energy is restored
+            HideEnergyDrinkHint();
 
             // Re-evaluate low energy state
             if (energyManager != null && energyManager.IsLowEnergy)

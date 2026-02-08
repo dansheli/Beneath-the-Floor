@@ -10,29 +10,28 @@ namespace BeneathTheFloor.Energy
         [Header("Energy Settings")]
         [SerializeField] private float maxEnergy = 100f;
         [SerializeField] private float currentEnergy = 100f;
-        [SerializeField] private float baseRegenRate = 4f;  // Energy per second when not digging
 
-        [Header("Regen Cooldown")]
-        [Tooltip("Energy only regenerates after not digging for this many seconds")]
-        [SerializeField] private float regenCooldownAfterDig = 1f;
+        [Header("Free Regen (Safety Net)")]
+        [Tooltip("Free regen only activates when energy is at or below this value")]
+        [SerializeField] private float freeRegenCap = 10f;
+        [Tooltip("Regen rate when below freeRegenCap")]
+        [SerializeField] private float baseRegenRate = 4f;
+        [Tooltip("Seconds after last dig before free regen starts")]
+        [SerializeField] private float regenCooldownAfterDig = 2f;
         private float timeSinceLastDig = 0f;
 
         [Header("Energy Upgrades")]
         [SerializeField] private int energyUpgradeLevel = 0;
-        [SerializeField] private float maxEnergyPerUpgrade = 25f;  // +25 max energy per upgrade
-        [SerializeField] private float regenRatePerUpgrade = 2f;  // +2 regen/s per upgrade
-        [SerializeField] private int maxEnergyUpgradeLevel = 7;  // L0-L5 in basement, L6-L7 in FirstRoom
+        [SerializeField] private float maxEnergyPerUpgrade = 50f;  // +50 max energy per upgrade
+        [SerializeField] private int maxEnergyUpgradeLevel = 7;  // L0-L7
 
-        [Header("Dig Energy Cost Per Tool")]
-        [SerializeField] private float tool1EnergyCost = 8f;  // Shovel - 8 energy per dig
-        [SerializeField] private float tool2EnergyCost = 6f;  // Heavy Spade - 6 energy per dig
-        [SerializeField] private float tool3EnergyCost = 4f;  // Pickaxe - 4 energy per dig
-        [SerializeField] private float tool5EnergyCost = 25f; // Sonic Pulser - 25 energy per shot
+        [Header("Dig Energy Cost")]
+        [SerializeField] private float digEnergyCost = 2f;  // Flat cost per dig (all tools)
 
         [Header("Energy Drinks")]
         [SerializeField] private int energyDrinkCount = 0;
         [SerializeField] private int maxEnergyDrinks = 5;
-        [SerializeField] private int energyDrinkCost = 20;  // Credits per drink
+        [SerializeField] private int energyDrinkCost = 10;  // Credits per drink
         [SerializeField] private KeyCode useDrinkKey = KeyCode.R;
 
         [Header("Low Energy Warning")]
@@ -77,7 +76,7 @@ namespace BeneathTheFloor.Energy
         public bool IsLowEnergy => currentEnergy <= lowEnergyThreshold;
         public float DigEnergyCost => GetCurrentToolDigCost();
         public float RegenRate => GetEffectiveRegenRate();
-        public bool IsRegenerating => timeSinceLastDig >= regenCooldownAfterDig && currentEnergy < GetEffectiveMaxEnergy();
+        public bool IsRegenerating => timeSinceLastDig >= regenCooldownAfterDig && currentEnergy < freeRegenCap;
         public int DrinkCount => energyDrinkCount;
         public int MaxDrinks => maxEnergyDrinks;
         public int DrinkCost => energyDrinkCost;
@@ -96,12 +95,15 @@ namespace BeneathTheFloor.Energy
             {
                 Instance = this;
 
-                // Force regen values (override any serialized Inspector values)
+                // Force values (override any serialized Inspector values from old system)
                 baseRegenRate = 4f;
-                regenRatePerUpgrade = 2f;
-                // Force max upgrade level to 7 (L0-L5 basement, L6-L7 FirstRoom exclusive)
+                regenCooldownAfterDig = 2f;
+                freeRegenCap = 10f;
+                maxEnergyPerUpgrade = 50f;
                 maxEnergyUpgradeLevel = 7;
-                if (enableDebugLogs) Debug.Log($"[EnergyManager] Initialized - baseRegenRate: {baseRegenRate}, regenRatePerUpgrade: {regenRatePerUpgrade}, maxLevel: {maxEnergyUpgradeLevel}");
+                digEnergyCost = 2f;
+                energyDrinkCost = 10;
+                if (enableDebugLogs) Debug.Log($"[EnergyManager] Initialized - digCost: {digEnergyCost}, freeRegenCap: {freeRegenCap}, maxLevel: {maxEnergyUpgradeLevel}");
 
                 // DontDestroyOnLoad only works on root GameObjects
                 if (transform.parent != null)
@@ -140,13 +142,12 @@ namespace BeneathTheFloor.Energy
                 AddEnergy(totalGeneration * Time.deltaTime);
             }
 
-            // Auto-regen only when NOT digging (cooldown has passed) and energy not blocked (jetpack)
-            if (!energyReplenishBlocked && timeSinceLastDig >= regenCooldownAfterDig && currentEnergy < effectiveMaxEnergy)
+            // Free regen: only when energy is below freeRegenCap and cooldown has passed
+            // Caps at freeRegenCap (NOT max energy) - player must use drinks to go higher
+            if (!energyReplenishBlocked && timeSinceLastDig >= regenCooldownAfterDig && currentEnergy < freeRegenCap)
             {
-                float effectiveRegenRate = GetEffectiveRegenRate();
-                float regenAmount = effectiveRegenRate * Time.deltaTime;
-
-                float newEnergy = Mathf.Min(currentEnergy + regenAmount, effectiveMaxEnergy);
+                float regenAmount = baseRegenRate * Time.deltaTime;
+                float newEnergy = Mathf.Min(currentEnergy + regenAmount, freeRegenCap);
                 if (newEnergy > currentEnergy)
                 {
                     currentEnergy = newEnergy;
@@ -260,25 +261,11 @@ namespace BeneathTheFloor.Energy
         }
 
         /// <summary>
-        /// Get the dig energy cost for the current tool.
+        /// Get the dig energy cost (flat for all tools).
         /// </summary>
         private float GetCurrentToolDigCost()
         {
-            // Get current tool index from HeldToolController
-            var toolController = Tools.HeldToolController.Instance;
-            if (toolController != null)
-            {
-                int toolIndex = toolController.CurrentToolIndex;
-                return toolIndex switch
-                {
-                    0 => tool1EnergyCost,  // Shovel - 8 energy
-                    1 => tool2EnergyCost,  // Heavy Spade - 6 energy
-                    2 => tool3EnergyCost,  // Pickaxe - 4 energy
-                    4 => tool5EnergyCost,  // Sonic Pulser - 25 energy per shot
-                    _ => tool1EnergyCost
-                };
-            }
-            return tool1EnergyCost;  // Default to Tool 1 cost
+            return digEnergyCost;
         }
 
         /// <summary>
@@ -339,17 +326,11 @@ namespace BeneathTheFloor.Energy
         }
 
         /// <summary>
-        /// Get dig energy cost for a specific tool index.
+        /// Get dig energy cost for a specific tool index (flat for all tools).
         /// </summary>
         public float GetDigEnergyCostForTool(int toolIndex)
         {
-            return toolIndex switch
-            {
-                0 => tool1EnergyCost,  // Shovel - 8 energy
-                1 => tool2EnergyCost,  // Heavy Spade - 6 energy
-                2 => tool3EnergyCost,  // Pickaxe - 4 energy
-                _ => tool1EnergyCost
-            };
+            return digEnergyCost;
         }
 
         /// <summary>
@@ -361,12 +342,18 @@ namespace BeneathTheFloor.Energy
         }
 
         /// <summary>
-        /// Get effective regen rate including upgrades.
+        /// Get effective regen rate (fixed, no upgrades).
+        /// Free regen only applies up to freeRegenCap.
         /// </summary>
         public float GetEffectiveRegenRate()
         {
-            return baseRegenRate + (energyUpgradeLevel * regenRatePerUpgrade);
+            return baseRegenRate;
         }
+
+        /// <summary>
+        /// Get the free regen energy cap.
+        /// </summary>
+        public float FreeRegenCap => freeRegenCap;
 
         /// <summary>
         /// Notify that a dig action occurred (resets regen cooldown).
@@ -390,13 +377,14 @@ namespace BeneathTheFloor.Energy
             }
 
             energyUpgradeLevel++;
+
+            // Refill energy to new max on upgrade
+            RefillToMax();
+
             if (enableDebugLogs)
             {
-                Debug.Log($"[EnergyManager] Energy upgraded to level {energyUpgradeLevel}!");
-                Debug.Log($"[EnergyManager] Max Energy: {GetEffectiveMaxEnergy()} (base {maxEnergy} + {energyUpgradeLevel} * {maxEnergyPerUpgrade})");
-                Debug.Log($"[EnergyManager] Regen Rate: {GetEffectiveRegenRate()}/s (base {baseRegenRate} + {energyUpgradeLevel} * {regenRatePerUpgrade})");
+                Debug.Log($"[EnergyManager] Energy upgraded to level {energyUpgradeLevel}! Refilled to {GetEffectiveMaxEnergy()}");
             }
-            OnEnergyChanged?.Invoke(currentEnergy, GetEffectiveMaxEnergy());
             return true;
         }
 
@@ -589,11 +577,10 @@ namespace BeneathTheFloor.Energy
 
         public string GetEnergyStatus()
         {
-            string regenStatus = IsRegenerating ? "(Regenerating)" : $"(Cooldown: {regenCooldownAfterDig - timeSinceLastDig:F1}s)";
+            string regenStatus = IsRegenerating ? $"(Free regen to {freeRegenCap})" : currentEnergy <= freeRegenCap ? $"(Cooldown: {Mathf.Max(0, regenCooldownAfterDig - timeSinceLastDig):F1}s)" : "";
             return $"Energy: {currentEnergy:F1}/{GetEffectiveMaxEnergy():F1} ({EnergyPercent * 100:F0}%) {regenStatus}\n" +
-                   $"Regen Rate: +{GetEffectiveRegenRate():F1}/s (Upgrade Lv.{energyUpgradeLevel})\n" +
-                   $"Sources: +{GetTotalGenerationRate():F1}/s\n" +
-                   $"Consumption: -{GetTotalConsumptionRate():F1}/s";
+                   $"Dig Cost: {digEnergyCost} | Drinks: {energyDrinkCount}/{maxEnergyDrinks} ({energyDrinkCost} credits)\n" +
+                   $"Capacity Lv.{energyUpgradeLevel}";
         }
     }
 }

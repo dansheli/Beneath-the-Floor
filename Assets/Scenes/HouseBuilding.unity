@@ -31500,10 +31500,6 @@ MonoBehaviour:
   needleMinRotation: 0
   needleMaxRotation: 180
   debugNeedle: 0
-  enableScreenLight: 1
-  screenLightColor: {r: 0.9, g: 0.95, b: 1, a: 1}
-  screenLightIntensity: 0.25
-  screenLightRange: 0.8
   hologramPrefab: {fileID: 8027289913948791399, guid: 1f9226d75ea8f3b4dbc3eb63bc95d15e,
     type: 3}
   hologramScale: 3
@@ -31512,11 +31508,18 @@ MonoBehaviour:
   hologramSpinSpeed: 45
   hologramBobAmplitude: 0.003
   hologramBobSpeed: 2
-  hologramColor: {r: 0, g: 0, b: 0, a: 0.85}
-  hologramEmission: 3
   coreShardHologramPrefab: {fileID: 7780826350791639743, guid: a1bfa4286f3bcfa4e973069412cc65f5,
     type: 3}
-  coreShardHologramColor: {r: 1, g: 0.7, b: 0.3, a: 0.85}
+  coreShardHologramOffset: {x: 0.005, y: 0.16, z: 0.05}
+  coreShardHologramScale: 3
+  chestPerfectAimAngle: 10
+  chestMaxDetectionAngle: 90
+  chestMinDetectionDistance: 0.3
+  chestMaxDetectionDistance: 15
+  shardPerfectAimAngle: 30
+  shardMaxDetectionAngle: 120
+  shardMinDetectionDistance: 2
+  shardMaxDetectionDistance: 80
   renderOnTop: 1
   onTopRenderQueue: 4000
   radarInstance: {fileID: 0}
@@ -38341,12 +38344,12 @@ MonoBehaviour:
   maxVolume: 1
   pitchVariation: 0.1
   enableDebugLogs: 0
-  disableEnergyConsumption: 1
+  disableEnergyConsumption: 0
   enableTestMode: 0
   testDigRadius: 2
   testDigStrength: 5
   testCreditsToAdd: 15000
-  addTestCreditsNow: 1
+  addTestCreditsNow: 0
 --- !u!114 &1019883704
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -62686,7 +62689,7 @@ PrefabInstance:
     - target: {fileID: 7053391327754329656, guid: 044ceac65530f724d8046fedf33aeb24,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7685813491892896898, guid: 044ceac65530f724d8046fedf33aeb24,
         type: 3}

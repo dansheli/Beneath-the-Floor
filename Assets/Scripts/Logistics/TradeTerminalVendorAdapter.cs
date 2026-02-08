@@ -6,7 +6,7 @@ namespace BeneathTheFloor.Logistics
 {
     public class TradeTerminalVendorAdapter : ITradeTerminalVendor
     {
-        private const int EnergyDrinkCost = 25;
+        private const int EnergyDrinkCost = 10;
         private const int LampCost = 50;
 
         public bool TryBuyEnergyDrink()

@@ -1557,7 +1557,8 @@ namespace BeneathTheFloor.Machines
 
             // V3 reads ToolPowerMultiplier directly, so update it
             ToolPowerMultiplier = combined;
-            ToolRadiusMultiplier = combined;
+            // Radius stays fixed at 1.0 - per-tool values in ToolSystemDigProvider define dig size
+            // Upgrades only make tools stronger, not wider
         }
 
         /// <summary>
@@ -1598,10 +1599,10 @@ namespace BeneathTheFloor.Machines
             // Combined multiplier = upgrade * tier
             float combined = multiplier * tierMult;
 
-            // Update power, radius, AND speed (combined upgrade)
+            // Update power and speed (combined upgrade)
             // Speed bonus makes higher tier tools dig faster, not just stronger
+            // Radius stays fixed at 1.0 - per-tool values in ToolSystemDigProvider define dig size
             ToolPowerMultiplier = combined;
-            ToolRadiusMultiplier = combined;
             ToolSpeedMultiplier = combined;
 
             // Apply to V2

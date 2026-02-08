@@ -1251,19 +1251,17 @@ namespace BeneathTheFloor.Machines
 
         private string GetEnergyDescription(int currentLevel)
         {
-            if (EnergyManager.Instance == null) return "Energy capacity and regeneration";
+            if (EnergyManager.Instance == null) return "Energy capacity";
 
             float currentMax = EnergyManager.Instance.MaxEnergy;
-            float currentRegen = EnergyManager.Instance.RegenRate;
 
             if (currentLevel >= TOTAL_MAX_LEVEL)
             {
-                return $"Maximum: {currentMax:F0} energy, {currentRegen:F0}/s regen";
+                return $"Maximum: {currentMax:F0} energy";
             }
 
-            int nextEnergy = 100 + ((currentLevel + 1) * 25);
-            int nextRegen = 4 + ((currentLevel + 1) * 2);
-            return $"Current: {currentMax:F0} energy, {currentRegen:F0}/s  →  Next: {nextEnergy} energy, {nextRegen}/s";
+            int nextEnergy = 100 + ((currentLevel + 1) * 50);
+            return $"Current: {currentMax:F0} energy  →  Next: {nextEnergy} energy";
         }
 
         private void TryPurchaseEnergyUpgrade(int cost)

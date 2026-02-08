@@ -84,7 +84,7 @@ namespace BeneathTheFloor.Economy
         private readonly Color buttonTealGlow = new Color(0.4f, 0.7f, 0.68f, 0.3f);       // Button edge glow
         private readonly Color closeRed = new Color(0.55f, 0.18f, 0.18f);                 // Dark red X button
 
-        private const int DRINK_COST = 25;
+        private const int DRINK_COST = 10;
         private const int LAMP_COST = 50;
         private const int MAX_DRINKS = 5;
         private const int MAX_LAMPS = 5;
