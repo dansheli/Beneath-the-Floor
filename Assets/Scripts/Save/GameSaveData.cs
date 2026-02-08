@@ -48,7 +48,7 @@ namespace BeneathTheFloor.Save
         public int lampsAvailable = 0;
 
         // Inventory Upgrades
-        public int inventoryUpgradeLevel = 0; // 0=base (5 slots), 1=expanded (10 slots), 2-6=stack size upgrades
+        public int inventoryUpgradeLevel = 0; // 0=base (5 slots), 1=expanded (10 slots), 2=fully expanded (15 slots), 3-7=stack size upgrades
 
         // Headlamp Upgrade
         public int headlampUpgradeLevel = 0; // 0=base, 1-2=upgraded range/intensity

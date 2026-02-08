@@ -1073,7 +1073,7 @@ namespace BeneathTheFloor.Tools
             // Fire projectile - punchy shot that removes a satisfying chunk (balanced for 0.2m voxels)
             // Quick shot = ~1.2m radius (6 voxels) so it's clearly the best tool in the game
             float quickDigRadius = Digging.DiggingSystem.Instance != null ? Digging.DiggingSystem.Instance.DigRadius : 0.5f;
-            quickDigRadius *= Machines.UpgradeStation.ToolRadiusMultiplier * 1.2f;
+            quickDigRadius *= Machines.UpgradeStation.ToolRadiusMultiplier * 0.8f;
             FireSonicProjectile(0.12f, quickDigRadius, 20f, 3f, sonicPulseColor);
 
             // Flash tip glow
@@ -1415,7 +1415,7 @@ namespace BeneathTheFloor.Tools
             float baseDigRadius = Digging.DiggingSystem.Instance != null ? Digging.DiggingSystem.Instance.DigRadius : 0.5f;
             // Charged shot scales from quick-shot size up to massive blast
             float chargedDigRadius = baseDigRadius * Machines.UpgradeStation.ToolRadiusMultiplier
-                * (1.2f + chargePower * 1.5f);
+                * (0.8f + chargePower * 1.0f);
             float chargedSpeed = 18f + Mathf.Min(chargePower, 3f) * 8f; // Speed caps at reasonable value
             Color chargedColor = Color.Lerp(sonicPulseColor, sonicChargedPulseColor, Mathf.Clamp01(chargePower));
             FireSonicProjectile(chargedVisual, chargedDigRadius, chargedSpeed, 3f, chargedColor);

@@ -388,6 +388,7 @@ namespace BeneathTheFloor.ResourceSystem
                     "coal" => ResourceType.Coal,
                     "silver" => ResourceType.Silver,
                     "gold" => ResourceType.Gold,
+                    "uranium" => ResourceType.Uranium,
                     _ => ResourceType.Dirt
                 };
             }

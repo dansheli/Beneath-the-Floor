@@ -54,13 +54,14 @@ namespace BeneathTheFloor.Inventory
         // Can be expanded via Backpack upgrades at runtime
         private const int INITIAL_MAX_SLOTS = 5;
         private const int UPGRADED_MAX_SLOTS = 10;
+        private const int FULLY_UPGRADED_MAX_SLOTS = 15;
         private int maxSlots = INITIAL_MAX_SLOTS;
 
         // STACKING: Can be upgraded from 1 to 6
-        // Upgrade path: First upgrade = slots (5->10), then upgrades 2-6 = stack size (1->6)
+        // Upgrade path: L1 = slots (5->10), L2 = slots (10->15), L3-L7 = stack size (2->6)
         private int currentMaxStackSize = 1;
-        private int inventoryUpgradeLevel = 0; // 0 = base, 1 = slots upgraded, 2-6 = stack sizes 2-6
-        private const int MAX_STACK_SIZE_UPGRADE_LEVEL = 6;
+        private int inventoryUpgradeLevel = 0; // 0 = base, 1 = 10 slots, 2 = 15 slots, 3-7 = stack sizes 2-6
+        private const int MAX_STACK_SIZE_UPGRADE_LEVEL = 7;
 
         [Header("Debug")]
         [SerializeField] private bool enableDebugLogs = false;
@@ -313,6 +314,7 @@ namespace BeneathTheFloor.Inventory
                 ResourceType.Copper => 5,
                 ResourceType.Silver => 15,
                 ResourceType.Gold => 30,
+                ResourceType.Uranium => 120,
 
                 // Refined materials (more valuable)
                 ResourceType.CompressedDirt => 3,
@@ -362,6 +364,7 @@ namespace BeneathTheFloor.Inventory
                 ResourceType.Copper => "Raw copper. Can be refined into ingots.",
                 ResourceType.Silver => "Precious silver ore. Valuable when refined.",
                 ResourceType.Gold => "Rare gold ore. Extremely valuable.",
+                ResourceType.Uranium => "Radioactive ore found deep underground. Extremely valuable.",
                 ResourceType.AncientArtifact => "A mysterious relic from the past.",
                 ResourceType.CompressedDirt => "Compressed dirt block. More durable.",
                 ResourceType.HardenedClay => "Hardened clay. Used for construction.",
@@ -383,7 +386,7 @@ namespace BeneathTheFloor.Inventory
             return type switch
             {
                 ResourceType.Dirt or ResourceType.Clay or ResourceType.Coal or
-                ResourceType.IronOre or ResourceType.Copper or ResourceType.Silver or ResourceType.Gold => MaterialType.Raw,
+                ResourceType.IronOre or ResourceType.Copper or ResourceType.Silver or ResourceType.Gold or ResourceType.Uranium => MaterialType.Raw,
 
                 ResourceType.CompressedDirt or ResourceType.HardenedClay or ResourceType.RefinedCoal or
                 ResourceType.IronIngot or ResourceType.CopperIngot or ResourceType.SilverIngot or ResourceType.GoldIngot => MaterialType.Refined,
@@ -1157,11 +1160,12 @@ namespace BeneathTheFloor.Inventory
         /// <summary>
         /// Upgrade the inventory. Upgrade path:
         /// - Level 0 -> 1: Increase slots from 5 to 10
-        /// - Level 1 -> 2: Stack size becomes 2
-        /// - Level 2 -> 3: Stack size becomes 3
-        /// - Level 3 -> 4: Stack size becomes 4
-        /// - Level 4 -> 5: Stack size becomes 5
-        /// - Level 5 -> 6: Stack size becomes 6 (max)
+        /// - Level 1 -> 2: Increase slots from 10 to 15
+        /// - Level 2 -> 3: Stack size becomes 2
+        /// - Level 3 -> 4: Stack size becomes 3
+        /// - Level 4 -> 5: Stack size becomes 4
+        /// - Level 5 -> 6: Stack size becomes 5
+        /// - Level 6 -> 7: Stack size becomes 6 (max)
         /// </summary>
         /// <returns>True if upgrade was successful, false if already at max level.</returns>
         public bool TryUpgradeInventory()
@@ -1180,10 +1184,16 @@ namespace BeneathTheFloor.Inventory
                 SetMaxSlots(UPGRADED_MAX_SLOTS);
                 if (enableDebugLogs) Debug.Log($"[InventorySystem] Inventory upgraded to level {inventoryUpgradeLevel}: Slots expanded to {UPGRADED_MAX_SLOTS}");
             }
+            else if (inventoryUpgradeLevel == 2)
+            {
+                // Second upgrade: Expand slots from 10 to 15
+                SetMaxSlots(FULLY_UPGRADED_MAX_SLOTS);
+                if (enableDebugLogs) Debug.Log($"[InventorySystem] Inventory upgraded to level {inventoryUpgradeLevel}: Slots expanded to {FULLY_UPGRADED_MAX_SLOTS}");
+            }
             else
             {
-                // Subsequent upgrades: Increase stack size
-                currentMaxStackSize = inventoryUpgradeLevel; // Level 2 = stack 2, Level 3 = stack 3, etc.
+                // Subsequent upgrades (L3-L7): Increase stack size
+                currentMaxStackSize = inventoryUpgradeLevel - 1; // Level 3 = stack 2, Level 4 = stack 3, etc.
 
                 // Consolidate existing items to use new stack size
                 ConsolidateStacks();
@@ -1213,9 +1223,14 @@ namespace BeneathTheFloor.Inventory
             inventoryUpgradeLevel = level;
 
             // Apply the upgrade effects based on level
-            if (level >= 1)
+            if (level >= 2)
             {
-                // Level 1+: Expanded slots (10)
+                // Level 2+: Fully expanded slots (15)
+                SetMaxSlots(FULLY_UPGRADED_MAX_SLOTS);
+            }
+            else if (level >= 1)
+            {
+                // Level 1: Expanded slots (10)
                 SetMaxSlots(UPGRADED_MAX_SLOTS);
             }
             else
@@ -1224,10 +1239,10 @@ namespace BeneathTheFloor.Inventory
                 SetMaxSlots(INITIAL_MAX_SLOTS);
             }
 
-            // Level 2+: Stack size upgrades
-            if (level >= 2)
+            // Level 3+: Stack size upgrades (L3=stack 2, L4=stack 3, ..., L7=stack 6)
+            if (level >= 3)
             {
-                currentMaxStackSize = level; // Level 2 = stack 2, Level 3 = stack 3, etc.
+                currentMaxStackSize = level - 1; // Level 3 = stack 2, Level 4 = stack 3, etc.
             }
             else
             {
@@ -1253,9 +1268,14 @@ namespace BeneathTheFloor.Inventory
             {
                 return $"{INITIAL_MAX_SLOTS}→{UPGRADED_MAX_SLOTS} slots";
             }
+            else if (nextLevel == 2)
+            {
+                return $"{UPGRADED_MAX_SLOTS}→{FULLY_UPGRADED_MAX_SLOTS} slots";
+            }
             else
             {
-                return $"Stack {currentMaxStackSize}→{nextLevel}";
+                int nextStack = nextLevel - 1;
+                return $"Stack {currentMaxStackSize}→{nextStack}";
             }
         }
 

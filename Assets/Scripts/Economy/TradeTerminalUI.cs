@@ -1277,6 +1277,7 @@ namespace BeneathTheFloor.Economy
                 ResourceType.Copper => new Color(0.85f, 0.55f, 0.30f),
                 ResourceType.Silver => new Color(0.80f, 0.80f, 0.85f),
                 ResourceType.Gold => new Color(1.0f, 0.85f, 0.30f),
+                ResourceType.Uranium => new Color(0.30f, 0.90f, 0.20f),
                 ResourceType.IronIngot => new Color(0.55f, 0.55f, 0.60f),
                 ResourceType.CopperIngot => new Color(0.90f, 0.60f, 0.35f),
                 ResourceType.SilverIngot => new Color(0.90f, 0.90f, 0.95f),

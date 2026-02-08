@@ -361,6 +361,7 @@ namespace BeneathTheFloor.UI
                 ResourceType.Copper => "Conductive metal. Used for advanced machinery.",
                 ResourceType.Silver => "Precious metal. Valuable for trading.",
                 ResourceType.Gold => "Rare precious metal. Required for premium upgrades.",
+                ResourceType.Uranium => "Radioactive ore found deep underground. Extremely valuable.",
                 ResourceType.AncientArtifact => "A mysterious relic from ages past.",
                 _ => "Unknown resource."
             };

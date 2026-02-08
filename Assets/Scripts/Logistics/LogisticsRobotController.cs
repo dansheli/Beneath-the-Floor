@@ -575,6 +575,9 @@ namespace BeneathTheFloor.Logistics
         private int _moveLayerMask = -1;
         private int _groundLayerMask = -1;
 
+        // Fan-ray angles for obstacle avoidance (degrees offset from target direction)
+        private static readonly float[] _avoidAngles = { 0f, 25f, -25f, 50f, -50f, 80f, -80f, 110f, -110f, 140f, -140f, 180f };
+
         private void MoveToward(Vector3 target, float speed)
         {
             float hoverHeight = config != null ? config.hoverHeight : 0.5f;
@@ -583,67 +586,70 @@ namespace BeneathTheFloor.Logistics
             dir.y = 0f;
             if (dir.sqrMagnitude < 0.01f) return;
 
-            Vector3 flatDir = dir.normalized;
-
-            // Face movement direction
-            Quaternion targetRot = Quaternion.LookRotation(flatDir);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, 10f * Time.deltaTime);
-
+            Vector3 desiredDir = dir.normalized;
             float moveStep = speed * Time.deltaTime;
 
             // Ensure layer masks are initialized (normally done in Start)
             if (_moveLayerMask == -1 || _groundLayerMask == -1)
                 InitializeLayerMasks();
 
-            // COLLISION DETECTION - raycast forward to detect walls
-            float castRadius = 0.3f;
-            Vector3 newPos = transform.position + flatDir * moveStep;
+            // OBSTACLE AVOIDANCE: Cast rays in a fan pattern to find the best open direction
+            float probeDistance = Mathf.Max(moveStep + 0.5f, 1.2f); // Look ahead at least 1.2m
+            Vector3 chosenDir = Vector3.zero;
 
-            // Raycast forward at robot height to detect walls (not floor)
-            Vector3 rayOrigin = transform.position + Vector3.up * 0.1f; // Slightly above ground
-            if (Physics.Raycast(rayOrigin, flatDir, out RaycastHit wallHit, moveStep + castRadius, _moveLayerMask, QueryTriggerInteraction.Ignore))
+            for (int i = 0; i < _avoidAngles.Length; i++)
             {
-                // Check if this is a wall (normal is mostly horizontal)
-                float verticalComponent = Mathf.Abs(wallHit.normal.y);
-                if (verticalComponent < 0.7f) // It's a wall, not floor
+                Vector3 testDir = Quaternion.Euler(0f, _avoidAngles[i], 0f) * desiredDir;
+
+                // Test at two heights (low and mid) to catch obstacles of varying height
+                bool blocked = false;
+                Vector3 rayLow = transform.position + Vector3.up * 0.1f;
+                Vector3 rayMid = transform.position + Vector3.up * 0.4f;
+
+                if (Physics.Raycast(rayLow, testDir, out RaycastHit hitLow, probeDistance, _moveLayerMask, QueryTriggerInteraction.Ignore))
                 {
-                    // Slide along wall
-                    Vector3 slideDir = flatDir - Vector3.Dot(flatDir, wallHit.normal) * wallHit.normal;
-                    slideDir.y = 0f;
-                    if (slideDir.sqrMagnitude > 0.01f)
-                    {
-                        flatDir = slideDir.normalized;
-                        moveStep *= 0.5f;
-                        newPos = transform.position + flatDir * moveStep;
-                    }
-                    else
-                    {
-                        newPos = transform.position; // Can't slide, stop
-                    }
+                    if (Mathf.Abs(hitLow.normal.y) < 0.7f) // Wall, not floor
+                        blocked = true;
+                }
+                if (!blocked && Physics.Raycast(rayMid, testDir, out RaycastHit hitMid, probeDistance, _moveLayerMask, QueryTriggerInteraction.Ignore))
+                {
+                    if (Mathf.Abs(hitMid.normal.y) < 0.7f)
+                        blocked = true;
+                }
+
+                if (!blocked)
+                {
+                    chosenDir = testDir;
+                    break; // First open direction wins (closest to desired)
                 }
             }
 
-            // Additional raycast slightly higher to catch taller obstacles
-            Vector3 rayOriginHigh = transform.position + Vector3.up * 0.4f;
-            if (Physics.Raycast(rayOriginHigh, flatDir, out RaycastHit highHit, moveStep + castRadius, _moveLayerMask, QueryTriggerInteraction.Ignore))
+            Vector3 newPos;
+            if (chosenDir.sqrMagnitude < 0.01f)
             {
-                float verticalComponent = Mathf.Abs(highHit.normal.y);
-                if (verticalComponent < 0.7f)
-                {
-                    newPos = transform.position; // Blocked by wall
-                }
+                // All directions blocked - don't move
+                newPos = transform.position;
+            }
+            else
+            {
+                // Face chosen movement direction
+                Quaternion targetRot = Quaternion.LookRotation(chosenDir);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, 10f * Time.deltaTime);
+
+                // Slow down when steering away from desired direction
+                float dot = Vector3.Dot(desiredDir, chosenDir);
+                float speedMult = Mathf.Lerp(0.4f, 1.0f, Mathf.Clamp01((dot + 1f) * 0.5f));
+
+                newPos = transform.position + chosenDir * (moveStep * speedMult);
             }
 
             // GROUND DETECTION: Simple raycast DOWN from robot position
-            // Only look for ground BELOW the robot, not from arbitrary heights
             float groundY = float.MinValue;
 
-            // Raycast from just above current position, looking down
-            Vector3 groundRayOrigin = transform.position + Vector3.up * 0.5f;
+            Vector3 groundRayOrigin = newPos + Vector3.up * 0.5f;
             if (Physics.Raycast(groundRayOrigin, Vector3.down, out RaycastHit groundHit, 15f, _groundLayerMask, QueryTriggerInteraction.Ignore))
             {
-                // Only use this hit if it's BELOW us (not a ceiling above)
-                if (groundHit.point.y < transform.position.y)
+                if (groundHit.point.y < newPos.y + 0.5f)
                 {
                     groundY = groundHit.point.y;
                 }
@@ -653,28 +659,23 @@ namespace BeneathTheFloor.Logistics
             float desiredY;
             if (groundY > float.MinValue)
             {
-                // Stay above detected ground
                 float targetY = groundY + hoverHeight;
-
-                // Smoothly adjust height
                 float heightDiff = targetY - transform.position.y;
                 float maxChange = 2f * Time.deltaTime;
 
                 if (Mathf.Abs(heightDiff) < maxChange)
                     desiredY = targetY;
                 else if (heightDiff > 0)
-                    desiredY = transform.position.y + maxChange; // Rise
+                    desiredY = transform.position.y + maxChange;
                 else
-                    desiredY = transform.position.y - maxChange; // Fall
+                    desiredY = transform.position.y - maxChange;
             }
             else
             {
-                // No ground found below - maintain current height
                 desiredY = transform.position.y;
             }
 
             newPos.y = desiredY;
-
             transform.position = newPos;
         }
 
@@ -693,9 +694,31 @@ namespace BeneathTheFloor.Logistics
 
                 if (moved < config.stuckMinMove)
                 {
-                    Debug.Log("[LogisticsRobot] Stuck -- repositioning");
-                    // Small random offset to get unstuck
-                    transform.position += new Vector3(Random.Range(-1f, 1f), 0f, Random.Range(-1f, 1f));
+                    Debug.Log("[LogisticsRobot] Stuck -- finding clear direction");
+
+                    // Try to find an open direction to nudge toward (not random)
+                    if (_moveLayerMask == -1) InitializeLayerMasks();
+                    Vector3 nudgeDir = Vector3.zero;
+                    float probeLen = 1.5f;
+
+                    // Try 8 compass directions and pick the first clear one
+                    for (int i = 0; i < 8; i++)
+                    {
+                        float angle = i * 45f;
+                        Vector3 testDir = Quaternion.Euler(0f, angle, 0f) * Vector3.forward;
+                        Vector3 rayOrigin = transform.position + Vector3.up * 0.2f;
+
+                        if (!Physics.Raycast(rayOrigin, testDir, probeLen, _moveLayerMask, QueryTriggerInteraction.Ignore))
+                        {
+                            nudgeDir = testDir;
+                            break;
+                        }
+                    }
+
+                    if (nudgeDir.sqrMagnitude > 0.01f)
+                    {
+                        transform.position += nudgeDir * 0.8f;
+                    }
                 }
 
                 stuckCheckPos = transform.position;

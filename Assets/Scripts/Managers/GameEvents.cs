@@ -74,6 +74,7 @@ namespace BeneathTheFloor
         Copper,
         Silver,
         Gold,
+        Uranium,
         AncientArtifact,
 
         // Refined Materials

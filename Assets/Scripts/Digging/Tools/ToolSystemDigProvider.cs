@@ -154,54 +154,54 @@ namespace BeneathTheFloor.Digging
 
             switch (toolIndex)
             {
-                case 0: // Shovel - starter tool
-                    radiusMultiplier = 0.8f;    // 0.40m = 2.0 voxels
-                    strengthMultiplier = 3.5f;   // effective 2.8
+                case 0: // Shovel - starter tool, small bites
+                    radiusMultiplier = 0.6f;    // 0.30m = 1.5 voxels
+                    strengthMultiplier = 2.0f;   // effective 1.6
                     maxHardness = tier1MaxHardness;
                     toolId = "shovel";
                     displayName = toolData?.toolName ?? "Shovel";
                     break;
-                case 1: // Heavy Spade - noticeably wider and stronger
-                    radiusMultiplier = 1.1f;    // 0.55m = 2.75 voxels
-                    strengthMultiplier = 5.5f;   // effective 4.4
+                case 1: // Heavy Spade - moderate improvement
+                    radiusMultiplier = 0.8f;    // 0.40m = 2.0 voxels
+                    strengthMultiplier = 3.0f;   // effective 2.4
                     maxHardness = tier2MaxHardness;
                     toolId = "heavy_spade";
                     displayName = toolData?.toolName ?? "Heavy Spade";
                     break;
-                case 2: // Pickaxe - big chunks, high power
-                    radiusMultiplier = 1.5f;    // 0.75m = 3.75 voxels
-                    strengthMultiplier = 8.0f;   // effective 6.4
+                case 2: // Pickaxe - solid mid-game tool
+                    radiusMultiplier = 1.0f;    // 0.50m = 2.5 voxels
+                    strengthMultiplier = 4.5f;   // effective 3.6
                     maxHardness = tier3MaxHardness;
                     toolId = "pickaxe";
                     displayName = toolData?.toolName ?? "Pickaxe";
                     break;
                 case 3: // Drill Pike - heavy industrial
-                    radiusMultiplier = 1.6f;    // 0.80m = 4.0 voxels
-                    strengthMultiplier = 9.0f;   // effective 7.2
+                    radiusMultiplier = 1.3f;    // 0.65m = 3.25 voxels
+                    strengthMultiplier = 6.5f;   // effective 5.2
                     maxHardness = 3.0f;
                     toolId = "drill_pike";
                     displayName = toolData?.toolName ?? "Drill Pike";
                     break;
-                case 4: // Sonic Pulser - biggest and most powerful
-                    radiusMultiplier = 2.4f;    // 1.20m = 6.0 voxels
-                    strengthMultiplier = 16.0f;  // effective 12.8
+                case 4: // Sonic Pulser - end-game (projectile has own values)
+                    radiusMultiplier = 1.6f;    // 0.80m = 4.0 voxels
+                    strengthMultiplier = 9.0f;   // effective 7.2
                     maxHardness = 5.0f;
                     toolId = "sonic_pulser";
                     displayName = toolData?.toolName ?? "Sonic Pulser";
                     break;
                 default:
-                    radiusMultiplier = 0.8f;
-                    strengthMultiplier = 3.5f;
+                    radiusMultiplier = 0.6f;
+                    strengthMultiplier = 2.0f;
                     maxHardness = 1.0f;
                     toolId = "unknown";
                     displayName = "Unknown Tool";
                     break;
             }
 
-            // Per-tier boost: each tier makes BOTH radius and strength noticeably larger
+            // Per-tier boost: noticeable but not extreme
             int tier = heldToolController.GetCurrentTier();
-            float tierRadiusBoost = 1.0f + (tier - 1) * 0.15f;   // T1=1.0, T2=1.15, T3=1.30, T4=1.45
-            float tierStrengthBoost = 1.0f + (tier - 1) * 0.25f;  // T1=1.0, T2=1.25, T3=1.50, T4=1.75
+            float tierRadiusBoost = 1.0f + (tier - 1) * 0.10f;   // T1=1.0, T2=1.10, T3=1.20, T4=1.30
+            float tierStrengthBoost = 1.0f + (tier - 1) * 0.15f;  // T1=1.0, T2=1.15, T3=1.30, T4=1.45
             radiusMultiplier *= tierRadiusBoost;
             strengthMultiplier *= tierStrengthBoost;
 

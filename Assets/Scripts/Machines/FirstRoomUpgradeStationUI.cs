@@ -27,7 +27,7 @@ namespace BeneathTheFloor.Machines
         public static int JetpackEfficiencyLevel { get; private set; } = 0;
         public const int JETPACK_EFFICIENCY_MAX_LEVEL = 3;
         private static readonly float[] jetpackDrainPerLevel = { 15f, 12f, 9f, 5f };
-        private static readonly int[] jetpackEfficiencyCosts = { 625, 1125, 1875 };
+        private static readonly int[] jetpackEfficiencyCosts = { 719, 1294, 2156 };
 
         // Power multiplier values per level
         private static readonly float[] toolPowerMultipliers = { 1.0f, 1.5f, 2.0f };
@@ -51,9 +51,9 @@ namespace BeneathTheFloor.Machines
         public const int TOTAL_MAX_LEVEL = 7;     // FirstRoom adds L6, L7
 
         // Costs for ALL energy upgrades (L0→L1 through L6→L7)
-        // Basement costs (L0-L5): 15, 188, 350, 563, 875
-        // FirstRoom exclusive (L6-L7): 1250, 1875
-        private static readonly int[] energyUpgradeCosts = { 15, 188, 350, 563, 875, 1250, 1875 };
+        // Basement costs (L0-L5): 15, 216, 403, 647, 1006
+        // FirstRoom exclusive (L6-L7): 1438, 2156
+        private static readonly int[] energyUpgradeCosts = { 15, 216, 403, 647, 1006, 1438, 2156 };
 
         // Tab system
         private enum UpgradeTab { Tools, Energy, Jetpack, Robots, Systems }
@@ -450,7 +450,7 @@ namespace BeneathTheFloor.Machines
                     "Increases dig power and digging area",
                     ToolPowerLevel,
                     TOOL_POWER_MAX_LEVEL,
-                    new int[] { 500, 1000 },
+                    new int[] { 575, 1150 },
                     "tool_power",
                     true); // isTopSection
 
@@ -464,7 +464,7 @@ namespace BeneathTheFloor.Machines
                     "Increases dig power and digging area",
                     ToolPowerLevel,
                     TOOL_POWER_MAX_LEVEL,
-                    new int[] { 500, 1000 },
+                    new int[] { 575, 1150 },
                     "tool_power");
             }
         }
@@ -740,7 +740,7 @@ namespace BeneathTheFloor.Machines
             else
             {
                 // BUY button with cost
-                int cost = 12500;
+                int cost = 14375;
 
                 GameObject btn = new GameObject("BuyButton");
                 btn.transform.SetParent(section.transform, false);
@@ -1355,19 +1355,19 @@ namespace BeneathTheFloor.Machines
                 new UpgradeItemData[] {
                     new UpgradeItemData("ACTIVATE DIGGER ROBOT",
                         "Deploy a digging robot. Shuts down when battery depletes — carry it back to dock.",
-                        1500, false, !activated, "robot_activated"),
+                        1725, false, !activated, "robot_activated"),
                     new UpgradeItemData("AUTONOMOUS MODE",
                         "Robot returns to dock at low battery, recharges, and resumes digging automatically.",
-                        800, !activated, activated && !smartStop, "robot_smart_stop"),
+                        920, !activated, activated && !smartStop, "robot_smart_stop"),
                 },
                 // Right column - Logistics Robot
                 new UpgradeItemData[] {
                     new UpgradeItemData("ACTIVATE LOGISTICS ROBOT",
                         "Deploy a resource collection robot. Shuts down when battery depletes — carry it back to dock.",
-                        2000, false, !LogisticsRobotActivated, "logistics_robot_activated"),
+                        2300, false, !LogisticsRobotActivated, "logistics_robot_activated"),
                     new UpgradeItemData("AUTONOMOUS MODE",
                         "Robot returns to dock at low battery, recharges, and resumes collecting automatically.",
-                        800, !LogisticsRobotActivated, LogisticsRobotActivated && !LogisticsAutonomous,
+                        920, !LogisticsRobotActivated, LogisticsRobotActivated && !LogisticsAutonomous,
                         "logistics_autonomous"),
                 }
             );

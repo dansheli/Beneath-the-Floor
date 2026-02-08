@@ -71,8 +71,8 @@ namespace BeneathTheFloor.ResourceSystem
         [Tooltip("Small radius: Size of the node for exposure calculation. Should match visual prefab size.")]
         [SerializeField] private float exposureRadius = 0.5f;
 
-        [Tooltip("Exposure threshold to break node (0-1). 0.15 = 15% of node surface is exposed to air.")]
-        [SerializeField] private float breakExposureThreshold = 0.15f;
+        [Tooltip("Exposure threshold to break node (0-1). 0.40 = 40% of node surface is exposed to air.")]
+        [SerializeField] private float breakExposureThreshold = 0.40f;
 
         [Tooltip("Grace period after node is revealed before it can break (seconds). Prevents instant-break for nodes at dig center.")]
         [SerializeField] private float revealGracePeriod = 2.0f; // Increased from 0.5s to 2s for more visible reveal time
@@ -203,7 +203,7 @@ namespace BeneathTheFloor.ResourceSystem
             }
 
             // Force exposure threshold to match 0.2m voxel balance (override stale inspector values)
-            breakExposureThreshold = 0.15f;
+            breakExposureThreshold = 0.40f;
 
             // Record game start time for startup grace period
             gameStartTime = Time.time;
@@ -1156,10 +1156,11 @@ namespace BeneathTheFloor.ResourceSystem
 
             float exposure = totalSamples > 0 ? (float)airSamples / totalSamples : 0f;
 
-            // If center is in air, ensure at least 60% exposure (will exceed 50% threshold)
-            if (centerDensity < 0.5f && exposure < 0.6f)
+            // If center is in air, boost exposure slightly but NOT above break threshold
+            // This prevents instant-break when a dig clips the center while node is still mostly buried
+            if (centerDensity < 0.5f && exposure < 0.35f)
             {
-                exposure = 0.6f;
+                exposure = 0.35f;
             }
 
             return exposure;

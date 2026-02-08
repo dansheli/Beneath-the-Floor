@@ -19828,7 +19828,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19255d8a6b9b1e1428fc67f715117740, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  radarPriority: 14
+  radarPriority: 18
   radarDisplayName: Large Treasure
   requireReveal: 0
   activationDistance: 0
@@ -43729,7 +43729,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19255d8a6b9b1e1428fc67f715117740, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  radarPriority: 16
+  radarPriority: 18
   radarDisplayName: Large Treasure
   requireReveal: 0
   activationDistance: 0
@@ -45275,16 +45275,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxEnergy: 100
   currentEnergy: 100
+  freeRegenCap: 10
   baseRegenRate: 2
   regenCooldownAfterDig: 1
   energyUpgradeLevel: 0
   maxEnergyPerUpgrade: 25
-  regenRatePerUpgrade: 0.5
   maxEnergyUpgradeLevel: 5
-  tool1EnergyCost: 8
-  tool2EnergyCost: 6
-  tool3EnergyCost: 4
-  tool5EnergyCost: 25
+  digEnergyCost: 2
   energyDrinkCount: 1
   maxEnergyDrinks: 5
   energyDrinkCost: 25
@@ -56051,7 +56048,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19255d8a6b9b1e1428fc67f715117740, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  radarPriority: 15
+  radarPriority: 18
   radarDisplayName: Treasure Chest
   requireReveal: 0
   activationDistance: 0
@@ -72107,7 +72104,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19255d8a6b9b1e1428fc67f715117740, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  radarPriority: 17
+  radarPriority: 18
   radarDisplayName: Small Treasure
   requireReveal: 0
   activationDistance: 0
